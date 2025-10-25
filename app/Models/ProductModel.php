@@ -4,12 +4,11 @@ use CodeIgniter\Model;
 
 class ProductModel extends Model
 {
-    protected $table = 'products'; // Tabela correspondente
+    protected $table = 'products';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['ml_item_id', 'title', 'product_type', 'delivery_data']; // Campos permitidos
-
-    // Habilitar timestamps (created_at, updated_at)
+    protected $allowedFields = ['ml_item_id', 'title', 'product_type', 'delivery_data'];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
+    protected $returnType = 'object';
 }

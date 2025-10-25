@@ -14,10 +14,12 @@
     <?= csrf_field() ?>
 
     <div class="mb-3">
-        <label for="ml_item_id" class="form-label">ML Item ID (Ex: MLB1234567890)</label>
+        <label for="ml_item_id" class="form-label">ML Item ID</label>
         <input type="text" class="form-control <?= (isset(validation_errors()['ml_item_id'])) ? 'is-invalid' : '' ?>" 
                id="ml_item_id" name="ml_item_id" 
-               value="<?= old('ml_item_id', $product->ml_item_id ?? '') ?>" required>
+               value="<?= old('ml_item_id', $product->ml_item_id ?? '') ?>" 
+               placeholder="Ex: MLB1234567890" 
+               required>
         <?php if (isset(validation_errors()['ml_item_id'])): ?>
             <div class="invalid-feedback"><?= validation_errors()['ml_item_id'] ?></div>
         <?php endif; ?>
@@ -27,7 +29,8 @@
         <label for="title" class="form-label">Título do Anúncio (Opcional)</label>
         <input type="text" class="form-control <?= (isset(validation_errors()['title'])) ? 'is-invalid' : '' ?>" 
                id="title" name="title" 
-               value="<?= old('title', $product->title ?? '') ?>">
+               value="<?= old('title', $product->title ?? '') ?>"
+               placeholder="Ex: Item de Teste – Por favor, NÃO OFERTAR!">
          <?php if (isset(validation_errors()['title'])): ?>
             <div class="invalid-feedback"><?= validation_errors()['title'] ?></div>
         <?php endif; ?>
@@ -37,7 +40,7 @@
         <label for="product_type" class="form-label">Tipo de Entrega</label>
         <select class="form-select <?= (isset(validation_errors()['product_type'])) ? 'is-invalid' : '' ?>" 
                 id="product_type" name="product_type" required>
-            <option value="">Selecione...</option>
+            <option value="">Selecione o tipo...</option>
             <option value="unique_code" <?= old('product_type', $product->product_type ?? '') === 'unique_code' ? 'selected' : '' ?>>
                 Código Único (Gift Card, Voucher, Chave)
             </option>

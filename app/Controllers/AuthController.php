@@ -1,4 +1,7 @@
-<?php namespace App\Controllers;
+<?php
+namespace App\Controllers;
+
+use App\Models\UserModel;
 
 class AuthController extends BaseController
 {
@@ -7,60 +10,56 @@ class AuthController extends BaseController
      */
     public function loginForm()
     {
+        helper('form');
         // Se já estiver logado, redireciona para o dashboard
         if (session()->get('admin_logged_in')) {
             return redirect()->route('admin.dashboard');
         }
-
         return view('admin/login'); // Carrega a view de login
     }
-
     /**
-     * Tenta autenticar o usuário.
+     * Tenta autenticar o utilizador usando o banco de dados.
      */
     public function attemptLogin()
     {
-         // Regras de validação básicas
+        // 1. Regras de validação (continuam iguais)
         $rules = [
-            'email'    => 'required|valid_email',
-            'password' => 'required|min_length[6]', // Aumente o min_length na prática!
+            'email' => 'required|valid_email',
+            'password' => 'required', // A validação do tamanho mínimo não é estritamente necessária aqui
         ];
 
-        if (! $this->validate($rules)) {
+        if (!$this->validate($rules)) {
             // Se a validação falhar, volta para o formulário com os erros
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
-
+        // 2. Pega os dados do formulário
         $email = $this->request->getPost('email');
         $password = $this->request->getPost('password');
-
-        // --- Lógica de Autenticação (EXEMPLO SIMPLES) ---
-        // !!! NA PRÁTICA: Busque o usuário no banco de dados pelo email
-        // !!! e use password_verify() para comparar a senha com o hash armazenado.
-        $adminEmail = 'admin@example.com'; // Coloque seu email aqui
-        $adminPassword = 'password';       // Coloque sua senha aqui (NÃO FAÇA ISSO EM PRODUÇÃO!)
-
-        if ($email === $adminEmail && $password === $adminPassword) {
-            // Login bem-sucedido!
+        // 3. Busca o utilizador no banco de dados pelo email
+        $userModel = new UserModel(); // Cria uma instância do seu UserModel
+        $user = $userModel->where('email', $email)->first(); // Procura o primeiro utilizador com esse email
+        //dd($user);
+        // 4. Verifica se o utilizador existe E se a senha está correta
+        if ($user && password_verify($password, $user->password_hash)) {
+            // Utilizador encontrado e senha correta!
+            // 5. Cria a sessão do administrador
             session()->set([
-                'admin_user_id' => 1, // Exemplo
-                'admin_email' => $email,
-                'admin_logged_in' => true,
+                'admin_user_id' => $user->id,          // Guarda o ID do utilizador logado
+                'admin_email' => $user->email,       // Guarda o email
+                'admin_first_name' => $user->first_name,  // Guarda o primeiro nome (opcional)
+                'admin_logged_in' => true,             // Flag que indica que está logado
             ]);
-
-            // Redireciona para a URL original ou para o dashboard
+            // 6. Redireciona para o painel ou URL anterior
             $redirectUrl = session()->get('redirect_url') ?? route_to('admin.dashboard');
-            session()->remove('redirect_url'); // Limpa a URL de redirecionamento
+            session()->remove('redirect_url');
 
             return redirect()->to($redirectUrl)->with('success', 'Login realizado com sucesso!');
 
         } else {
-            // Login falhou
+            // Utilizador não encontrado ou senha incorreta
             return redirect()->route('login')->withInput()->with('error', 'Email ou senha inválidos.');
         }
-        // --- Fim da Lógica de Autenticação ---
     }
-
     /**
      * Faz logout do usuário.
      */

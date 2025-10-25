@@ -1,4 +1,6 @@
-<?php namespace App\Database\Migrations;
+<?php
+
+namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
@@ -16,7 +18,6 @@ class CreateProductsTable extends Migration
             'updated_at' => [ 'type' => 'DATETIME', 'null' => true ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('ml_item_id');
         $this->forge->createTable('products'); // Nome da tabela: products
     }
 
