@@ -1,4 +1,5 @@
-<?php namespace App\Controllers\Admin;
+<?php
+namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\ProductModel;
@@ -23,11 +24,8 @@ class StockController extends BaseController
      */
     public function index()
     {
-        // Busca apenas produtos que podem ter estoque (ou link)
-        $data['productsForStock'] = $this->productModel->orderBy('title', 'ASC')->findAll(); 
-        // Você pode querer buscar também o estoque atual aqui para exibir
-
-        return view('admin/stock_form', $data); // Passa a lista de produtos para o select
+        $data['productsForStock'] = $this->productModel->orderBy('title', 'ASC')->findAll();
+        return view('admin/stock_form', $data);
     }
 
     /**
@@ -35,23 +33,31 @@ class StockController extends BaseController
      */
     public function add()
     {
-         // --- Lógica de Validação ---
-         $rules = [
-            'product_id'    => 'required|is_natural_no_zero|is_not_unique[products.id]', // Garante que o ID existe
+        // --- Lógica de Validação ---
+        $rules = [
+            'product_id' => 'required|is_natural_no_zero|is_not_unique[products.id]',
             'codes_or_link' => 'required',
+            'expires_at' => 'permit_empty|valid_date[Y-m-d]', // << Nova regra de validação
         ];
-         $product = $this->productModel->find($this->request->getPost('product_id'));
+        $product = $this->productModel->find($this->request->getPost('product_id'));
 
-         if (!$product || ! $this->validate($rules)) {
-             $errors = $this->validator ? $this->validator->getErrors() : [];
-             if (!$product) $errors['product_id'] = 'Produto selecionado é inválido.';
+        if (!$product || !$this->validate($rules)) {
+            $errors = $this->validator ? $this->validator->getErrors() : [];
+            if (!$product)
+                $errors['product_id'] = 'Produto selecionado é inválido.';
 
-             return redirect()->route('admin.stock')->withInput()->with('errors', $errors);
+            // Retorna para a rota nomeada 'admin.stock' (que é a index deste controller)
+            return redirect()->route('admin.stock')->withInput()->with('errors', $errors);
         }
 
         $productId = $product->id;
         $inputType = $product->product_type;
         $inputData = trim($this->request->getPost('codes_or_link'));
+        $expiresAt = $this->request->getPost('expires_at'); // << Pega a data de validade
+
+        // Converte para null se estiver vazio, senão o DB pode reclamar
+        $expiresAt = empty($expiresAt) ? null : $expiresAt;
+
         $insertedCount = 0;
         $errorMessages = [];
 
@@ -59,39 +65,39 @@ class StockController extends BaseController
         // --- Salvar no Banco (com Criptografia) ---
         try {
             if ($inputType === 'static_link') {
-                // Criptografa o link antes de salvar/atualizar
+                // Se for link estático, ignora expires_at
                 $encryptedLink = $this->encrypter->encrypt($inputData);
-
                 if ($this->productModel->update($productId, ['delivery_data' => $encryptedLink])) {
                     $insertedCount = 1;
                 } else {
                     throw new \Exception('Falha ao atualizar o link estático.');
                 }
-            } 
-            elseif ($inputType === 'unique_code') {
-                $codes = explode("\n", str_replace("\r", "", $inputData)); // Divide por linha
+            } elseif ($inputType === 'unique_code') {
+                $codes = explode("\n", str_replace("\r", "", $inputData));
                 $batchData = [];
 
                 foreach ($codes as $code) {
                     $trimmedCode = trim($code);
                     if (!empty($trimmedCode)) {
-                        // Criptografa cada código antes de preparar para inserção
-                         $encryptedCode = $this->encrypter->encrypt($trimmedCode);
+                        $encryptedCode = $this->encrypter->encrypt($trimmedCode);
 
-                         $batchData[] = [
+                        $batchData[] = [
                             'product_id' => $productId,
-                            'code' => $encryptedCode, // Salva criptografado
+                            'code' => $encryptedCode,
                             'is_sold' => false,
+                            'expires_at' => $expiresAt, // << Inclui a data de validade aqui
                         ];
                     }
                 }
 
                 if (!empty($batchData)) {
-                    // Insere todos os códigos de uma vez (mais eficiente)
                     if ($this->stockCodeModel->insertBatch($batchData)) {
                         $insertedCount = count($batchData);
                     } else {
-                         throw new \Exception('Falha ao inserir os códigos em lote.');
+                        // Pega o erro do DB se disponível
+                        $dbError = $this->stockCodeModel->db->error();
+                        $errorMessage = $dbError['message'] ?? 'Falha ao inserir os códigos em lote.';
+                        throw new \Exception($errorMessage);
                     }
                 } else {
                     $errorMessages[] = 'Nenhum código válido foi fornecido.';
@@ -99,14 +105,16 @@ class StockController extends BaseController
             }
 
             if ($insertedCount > 0) {
-                 return redirect()->route('admin.stock')->with('success', $insertedCount . ' item(s) de estoque adicionado(s) com sucesso!');
+                return redirect()->route('admin.stock')->with('success', $insertedCount . ' item(s) de estoque adicionado(s) com sucesso!');
             } else {
-                 return redirect()->route('admin.stock')->withInput()->with('error', 'Nenhum item adicionado. ' . implode(' ', $errorMessages));
+                // Usa with('error', ...) para mensagens de erro
+                return redirect()->route('admin.stock')->withInput()->with('error', 'Nenhum item adicionado. ' . implode(' ', $errorMessages));
             }
 
         } catch (\Throwable $e) {
-             log_message('error', '[StockController::add] Erro: ' . $e->getMessage());
-             return redirect()->route('admin.stock')->withInput()->with('error', 'Ocorreu um erro interno ao adicionar o estoque.');
+            log_message('error', '[StockController::add] Erro: ' . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
+            // Usa with('error', ...) para mensagens de erro
+            return redirect()->route('admin.stock')->withInput()->with('error', 'Ocorreu um erro interno ao adicionar o estoque: ' . $e->getMessage());
         }
     }
 }

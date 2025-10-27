@@ -3,64 +3,80 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use CodeIgniter\Database\RawSql; // Importar RawSql
 
-class CreateMlCredentialsTable extends Migration
+class CreateMlCredentialsTable extends Migration // Certifique-se que o nome da classe está correto
 {
     public function up()
     {
         $this->forge->addField([
             'id' => [
-                'type' => 'INT',
-                'constraint' => 5,
-                'unsigned' => true,
+                'type'           => 'INT',
+                'constraint'     => 5,
+                'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            // 'key_name' pode ser usado se você gerenciar múltiplas contas ML
-            // Para uma única conta, podemos usar um valor fixo como 'default'
-            'key_name' => [
-                'type' => 'VARCHAR',
+            'key_name' => [ // Mantém a chave para identificar o registro (útil se um dia tiver mais contas)
+                'type'       => 'VARCHAR',
                 'constraint' => '50',
-                'unique' => true, // Garante apenas uma entrada por chave
-                'default' => 'default',
+                'unique'     => true,
+                'default'    => 'default', // Ou pode deixar nulo se preferir
+            ],
+            'seller_id' => [ // << NOVO CAMPO ADICIONADO AQUI
+                'type'       => 'BIGINT',
+                'unsigned'   => true,
+                'null'       => true, // Permite ser nulo até ser preenchido pela API
             ],
             'access_token' => [
-                'type' => 'TEXT', // Access tokens podem ser longos
+                'type' => 'TEXT',
                 'null' => true,
             ],
             'refresh_token' => [
-                'type' => 'TEXT', // Refresh tokens também
+                'type' => 'TEXT',
                 'null' => true,
             ],
-            'expires_in' => [ // Tempo em segundos até expirar (vindo da API)
-                'type' => 'INT',
+            'expires_in' => [ // Tempo em segundos retornado pela API
+                'type'       => 'INT',
                 'constraint' => 11,
-                'null' => true,
+                'null'       => true,
             ],
-            'token_updated_at' => [ // Quando o token foi atualizado pela última vez
+            'token_updated_at' => [ // Quando o token foi atualizado/obtido pela última vez
                 'type' => 'DATETIME',
                 'null' => true,
             ],
-            'created_at' => [
+            // Substituí token_expires_at por token_updated_at + expires_in
+            // porque a API geralmente retorna 'expires_in' (duração)
+
+            'created_at' => [ // Gerenciado pelo Model agora
                 'type' => 'DATETIME',
                 'null' => true,
             ],
-            'updated_at' => [
+            'updated_at' => [ // Gerenciado pelo Model agora
                 'type' => 'DATETIME',
                 'null' => true,
             ],
+            // Adicionei last_updated para a lógica do getSellerId()
+             'last_updated' => [
+                 'type' => 'DATETIME',
+                 'null' => true,
+             ],
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addKey('seller_id'); // Adiciona índice para seller_id
         $this->forge->createTable('ml_credentials');
 
-        // Opcional: Inserir uma linha inicial se não existir
-        // (Você pode fazer isso manualmente ou via Seeder também)
+        // REMOVIDO: A inserção inicial é melhor feita via Seeder ou pela própria lógica do app
+        // para evitar dependência do .env durante a migração.
+        /*
         $this->db->table('ml_credentials')->insert([
             'key_name' => 'default',
-            'access_token' => env('ml.accessToken'), // Pega valor inicial do .env
-            'refresh_token' => env('ml.refreshToken'), // Pega valor inicial do .env
+            // Não insira tokens aqui, eles devem ser obtidos via fluxo de autenticação
+            // 'access_token' => env('ml.accessToken'),
+            // 'refresh_token' => env('ml.refreshToken'),
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
+        */
     }
 
     public function down()
