@@ -2,7 +2,10 @@
 :root {
     --sidebar-width-expanded: 250px;
     --sidebar-width-collapsed: 80px;
+    /* Ajuste se necessário */
     --transition-speed: 0.3s;
+    --sidebar-top-height: 55px;
+    /* Altura da linha superior colapsada */
 }
 
 body {
@@ -28,92 +31,227 @@ body {
     width: var(--sidebar-width-collapsed);
 }
 
-/* Esconde texto quando colapsado */
-.sidebar.collapsed .nav-link span:not(.toggle-text),
-.sidebar.collapsed .sidebar-header span,
-.sidebar.collapsed .dropdown-toggle strong span,
-.sidebar.collapsed .theme-switcher-label span,
-.sidebar.collapsed .logout-link span,
-.sidebar.collapsed .sidebar-toggle-item .toggle-text {
+/* Wrapper para header e toggle */
+.sidebar-top-wrapper {
+    margin-bottom: 0.5rem;
+    /* Espaçamento abaixo no modo expandido */
+    transition: margin var(--transition-speed) ease;
+}
+
+/* Header padrão (expandido) */
+.sidebar .sidebar-header {
+    margin-bottom: 0;
+    /* Wrapper controla a margem inferior */
+    transition: padding var(--transition-speed) ease;
+}
+
+.sidebar .sidebar-header a i {
+    transition: margin var(--transition-speed) ease;
+}
+
+/* Toggle item padrão (expandido) */
+.sidebar .sidebar-toggle-item {
+    /* O margin-bottom foi movido para o wrapper */
+    margin-bottom: 0;
+    transition: padding var(--transition-speed) ease, margin var(--transition-speed) ease;
+}
+
+.sidebar .sidebar-toggle-item button.nav-link {
+    /* MUDANÇA: Ajustado para botão de ícone */
+    width: auto;
+    /* De 100% para auto */
+    justify-content: center;
+    /* De start para center */
+    border: none;
+    background-color: transparent;
+    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+    transition: justify-content var(--transition-speed) ease, padding var(--transition-speed) ease;
+}
+
+.sidebar .sidebar-toggle-item button.nav-link:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.sidebar .sidebar-toggle-item button.nav-link i {
+    /* MUDANÇA: Removida margem, pois não há mais texto */
+    margin-right: 0;
+    vertical-align: middle;
+    transition: margin var(--transition-speed) ease;
+}
+
+/* --- ESTADO COLAPSADO --- */
+/* Wrapper vira Flex container */
+.sidebar.collapsed .sidebar-top-wrapper {
+    display: flex;
+    align-items: center;
+    /* Alinha verticalmente header e toggle */
+    height: var(--sidebar-top-height);
+    /* Define altura fixa */
+    margin-bottom: 0.5rem;
+    /* Mantém espaçamento abaixo */
+    padding: 0;
+    /* Remove padding interno do wrapper se houver */
+}
+
+/* Header colapsado */
+.sidebar.collapsed .sidebar-header {
+    flex: 1;
+    /* Ocupa metade do espaço */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar.collapsed .sidebar-header a {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar.collapsed .sidebar-header a span {
     display: none;
 }
-/* Centraliza ícones e elementos quando colapsado */
-.sidebar.collapsed .nav-link:not(#sidebarToggle),
-.sidebar.collapsed .dropdown-toggle,
-.sidebar.collapsed .logout-link,
-.sidebar.collapsed .sidebar-header a {
-    justify-content: center;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+
+/* Esconde texto */
+.sidebar.collapsed .sidebar-header a i {
+    margin: 0;
 }
+
+/* Remove margem do ícone */
+/* Toggle item colapsado */
+.sidebar.collapsed .sidebar-toggle-item {
+    flex: 1;
+    /* Ocupa a outra metade */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar.collapsed .sidebar-toggle-item button.nav-link {
+    padding: 0.5rem;
+    width: auto;
+    height: auto;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+}
+
+.sidebar.collapsed .sidebar-toggle-item button.nav-link span {
+    display: none;
+}
+
+/* Esconde texto */
+.sidebar.collapsed .sidebar-toggle-item button.nav-link i {
+    margin: 0;
+}
+
+/* Remove margem do ícone */
+/* Esconde texto dos outros elementos quando colapsado */
+.sidebar.collapsed .nav-link span:not(.toggle-text),
+.sidebar.collapsed .dropdown-toggle span,
+.sidebar.collapsed .theme-switcher-label span,
+.sidebar.collapsed .logout-link span {
+    display: none;
+}
+
+/* Centraliza ÍCONES dos outros links e rodapé */
+.sidebar.collapsed .nav-pills .nav-link,
+/* Links da lista UL */
+.sidebar.collapsed .dropdown-toggle,
+.sidebar.collapsed .logout-link {
+    justify-content: center;
+    align-items: center;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    padding-left: 0;
+    padding-right: 0;
+    min-height: 50px;
+    height: auto;
+    width: 100%;
+}
+
+/* Faz com que a lista de navegação ocupe toda a largura, 
+   quebrando o padding horizontal (p-3) do sidebar colapsado */
+.sidebar.collapsed .nav-pills {
+    margin-left: -1rem;
+    /* Anula o 'padding-left: 1rem' do p-3 */
+    margin-right: -1rem;
+    /* Anula o 'padding-right: 1rem' do p-3 */
+}
+
+/* Remove margem dos ícones nesses outros links */
+.sidebar.collapsed .nav-pills .nav-link i[class*="fa-"],
+.sidebar.collapsed .dropdown-toggle i[class*="fa-"],
+/* Remove margem dos ícones nesses outros links */
+.sidebar.collapsed .nav-pills .nav-link i[class*="fa-"],
+.sidebar.collapsed .dropdown-toggle i[class*="fa-"],
+.sidebar.collapsed .logout-link i[class*="fa-"] {
+    margin: 0;
+}
+
 /* Centraliza o switch quando colapsado */
 .sidebar.collapsed .theme-switcher-container {
     justify-content: center !important;
+    align-items: center;
     padding: 0.5rem;
     background-color: transparent !important;
     border: none;
-}
-.sidebar.collapsed .theme-switcher-container:hover {
-    background-color: var(--bs-tertiary-bg) !important;
+    min-height: 50px;
+    /* Consistência */
 }
 
+.sidebar.collapsed .theme-switcher-label span,
+.sidebar.collapsed .theme-switcher-label i.theme-icon {
+    display: none;
+}
+
+.sidebar.collapsed .theme-switcher-label {
+    width: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+
+/* Posição do dropdown quando colapsado */
 .sidebar.collapsed .dropdown-menu {
     position: absolute !important;
     left: 100%;
     bottom: 5px;
+    /* Ajuste se necessário */
     margin-left: 0.5rem;
 }
-/* Ícones gerais */
-.sidebar .nav-link:not(#sidebarToggle) .bi,
-.sidebar .dropdown-toggle .bi,
-.sidebar .logout-link .bi,
-.sidebar .sidebar-header .bi {
+
+/* Ícones gerais na sidebar (Font Awesome) - Estado Expandido */
+.sidebar .nav-link:not(#sidebarToggle) i.fa-fw,
+.sidebar .dropdown-toggle i.fa-fw,
+.sidebar .logout-link i.fa-fw,
+.sidebar .sidebar-header i.fa-fw {
     margin-right: 8px;
-    vertical-align: text-bottom;
-    width: 1.5em;
-    display: inline-block;
-    text-align: center;
+    vertical-align: middle;
     transition: margin var(--transition-speed) ease;
 }
-/* Remove margem direita dos ícones quando colapsado */
-.sidebar.collapsed .nav-link:not(#sidebarToggle) .bi,
-.sidebar.collapsed .dropdown-toggle .bi,
-.sidebar.collapsed .logout-link .bi,
-.sidebar.collapsed .sidebar-header a .bi {
-     margin-right: 0;
-}
-/* Botão Toggle como Nav Item */
-.sidebar-toggle-item button.nav-link {
-    width: 100%;
-    justify-content: start;
-    margin-bottom: 0.5rem;
-    border: none;
-    background-color: transparent;
-    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
-}
-.sidebar-toggle-item button.nav-link:hover {
-    background-color: var(--bs-tertiary-bg);
-}
-.sidebar-toggle-item button.nav-link .bi {
-     margin-right: 8px;
-     width: 1.5em;
-     text-align: center;
-     vertical-align: middle;
-     transition: margin var(--transition-speed) ease;
-}
-/* Botão Toggle Colapsado */
-.sidebar.collapsed .sidebar-toggle-item button.nav-link {
-    justify-content: center;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-}
-.sidebar.collapsed .sidebar-toggle-item button.nav-link .bi {
-    margin-right: 0;
+
+/* Ícones em dropdowns e botões (fora da sidebar) */
+.dropdown-item i[class*="fa-"] {
+    margin-right: 8px;
 }
 
-.dropdown-item .bi { margin-right: 8px; }
-.btn .bi { vertical-align: text-bottom; }
+.btn i[class*="fa-"] {
+    vertical-align: text-bottom;
+}
 
+/* Conteúdo Principal e Navbar */
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width-expanded);
@@ -122,23 +260,92 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-body.sidebar-collapsed .main-content { margin-left: var(--sidebar-width-collapsed); }
-.content { flex: 1; padding: 20px; }
-.navbar { border-bottom: 1px solid var(--bs-border-color); min-height: 56px; }
 
-.sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--bs-border-color); }
+body.sidebar-collapsed .main-content {
+    margin-left: var(--sidebar-width-collapsed);
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+}
+
+.navbar {
+    border-bottom: 1px solid var(--bs-border-color);
+    min-height: 56px;
+}
+
+/* Rodapé da Sidebar */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
 /* Switch de Tema */
-.theme-switcher-container { background-color: var(--bs-secondary-bg); border: 1px solid var(--bs-border-color-translucent); cursor: pointer; transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease; }
-.theme-switcher-container:hover { background-color: var(--bs-tertiary-bg); }
-.theme-switcher-container .form-check-input { cursor: pointer; font-size: 1.2em; margin-left: auto; }
-.theme-switcher-label { pointer-events: none; margin-right: auto; }
-.theme-switcher-label i.bi { vertical-align: text-bottom; }
-.sidebar.collapsed .theme-switcher-label span, .sidebar.collapsed .theme-switcher-label i.bi { display: none; }
-.sidebar.collapsed .theme-switcher-label { width: 0; overflow: hidden; margin: 0; padding: 0; pointer-events: none; }
+.theme-switcher-container {
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color-translucent);
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+.theme-switcher-container:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.theme-switcher-container .form-check-input {
+    cursor: pointer;
+    font-size: 1.2em;
+    margin-left: auto;
+}
+
+.theme-switcher-label {
+    pointer-events: none;
+    margin-right: auto;
+}
+
+.theme-switcher-label i.theme-icon {
+    vertical-align: middle;
+}
+
 /* Link Logout */
-.logout-link { padding: 0.5rem 1rem; color: var(--bs-nav-link-color); display: flex; align-items: center; text-decoration: none; border-radius: var(--bs-nav-pills-border-radius); }
-.logout-link:hover { color: var(--bs-nav-link-hover-color); background-color: var(--bs-tertiary-bg); }
-.sidebar.collapsed .logout-link span { display: none; }
+.logout-link {
+    color: var(--bs-nav-link-color);
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    border-radius: var(--bs-nav-pills-border-radius);
+    /* Aplicar padding/min-height consistente */
+    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+    min-height: 50px;
+}
+
+.logout-link:hover {
+    color: var(--bs-nav-link-hover-color);
+    background-color: var(--bs-tertiary-bg);
+}
+
+/* Dropdown Usuário no Rodapé Colapsado */
+.sidebar.collapsed .dropdown>a {
+    justify-content: center;
+    align-items: center;
+    padding: 0.75rem 0;
+    min-height: 50px;
+    width: 100%;
+}
+
+.sidebar.collapsed .dropdown>a i {
+    margin: 0;
+}
+
 /* Tooltips */
-body .tooltip .tooltip-inner { background-color: var(--bs-emphasis-color); color: var(--bs-body-bg); }
-body .tooltip.bs-tooltip-auto[data-popper-placement^=right] .tooltip-arrow::before, body .tooltip.bs-tooltip-end .tooltip-arrow::before { border-right-color: var(--bs-emphasis-color); }
+body .tooltip .tooltip-inner {
+    background-color: var(--bs-emphasis-color);
+    color: var(--bs-body-bg);
+}
+
+body .tooltip.bs-tooltip-auto[data-popper-placement^=right] .tooltip-arrow::before,
+body .tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: var(--bs-emphasis-color);
+}

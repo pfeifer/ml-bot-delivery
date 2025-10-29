@@ -5,64 +5,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $this->renderSection('title') ?> - Admin ML Bot</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <link rel="stylesheet" href="<?= base_url('css/template.css') ?>"> <?= $this->renderSection('styles') ?>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="<?= base_url('css/template.css') ?>">
+    <?= $this->renderSection('styles') ?>
 </head>
 
 <body>
-
     <nav class="sidebar p-3 bg-body-tertiary" id="adminSidebar">
-        <div class="sidebar-header d-flex align-items-center mb-3">
-            <a href="<?= route_to('admin.dashboard') ?>"
-                class="link-body-emphasis text-decoration-none d-flex align-items-center me-2">
-                <i class="bi bi-robot fs-4"></i>
-                <span class="fs-5 ms-2">ML Bot Admin</span>
-            </a>
+        <div class="sidebar-top-wrapper">
+            <div class="sidebar-header d-flex align-items-center">
+                <a href="<?= route_to('admin.dashboard') ?>"
+                    class="link-body-emphasis text-decoration-none d-flex align-items-center me-2">
+                    <i class="fa-solid fa-robot fa-lg fa-fw"></i>
+                    <span class="fs-5 ms-2">ML Bot Admin</span>
+                </a>
+                <div class="sidebar-toggle-item nav-item ms-auto">
+                    <button class="nav-link link-body-emphasis d-flex align-items-center" type="button"
+                        id="sidebarToggle">
+                        <i class="fa-solid fa-bars fa-fw"></i>
+                    </button>
+                </div>
+            </div>
         </div>
-
         <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item sidebar-toggle-item">
-                <button class="nav-link link-body-emphasis d-flex align-items-center" type="button" id="sidebarToggle"
-                    title="Recolher/Expandir Menu">
-                    <i class="bi bi-list fs-5"></i>
-                    <span class="toggle-text ms-2">Recolher Menu</span>
-                </button>
-            </li>
             <li class="nav-item">
                 <a href="<?= route_to('admin.dashboard') ?>"
                     class="nav-link d-flex align-items-center <?= (uri_string() === 'admin') ? 'active' : 'link-body-emphasis' ?>">
-                    <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+                    <i class="fa-solid fa-gauge fa-lg fa-fw"></i>
+                    <span>Dashboard</span>
                 </a>
             </li>
-            <li>
+            <li class="nav-item">
                 <a href="<?= route_to('admin.products') ?>"
                     class="nav-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/products')) ? 'active' : 'link-body-emphasis' ?>">
-                    <i class="bi bi-box-seam"></i> <span>Produtos</span>
+                    <i class="fa-solid fa-box fa-lg fa-fw"></i>
+                    <span>Produtos</span>
                 </a>
             </li>
-            <li>
+            <li class="nav-item">
                 <a href="<?= route_to('admin.stock') ?>"
                     class="nav-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/stock')) ? 'active' : 'link-body-emphasis' ?>">
-                    <i class="bi bi-stack"></i> <span>Estoque</span>
+                    <i class="fa-solid fa-boxes-stacked fa-lg fa-fw"></i>
+                    <span>Estoque</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="<?= route_to('admin.stock') ?>"
+                    class="nav-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/mercadolivre')) ? 'active' : 'link-body-emphasis' ?>">
+                    <i class="fa-solid fa-handshake-simple fa-lg fa-fw"></i>
+                    <span>Mercado Livre</span>
                 </a>
             </li>
         </ul>
 
         <div class="sidebar-footer">
             <a href="<?= route_to('logout') ?>" class="logout-link mb-2">
-                <i class="bi bi-box-arrow-right"></i>
+                <i class="fa-solid fa-right-from-bracket fa-lg fa-fw"></i>
                 <span>Sair</span>
             </a>
             <div
                 class="form-check form-switch mb-3 d-flex align-items-center justify-content-between theme-switcher-container p-2 rounded">
                 <label class="form-check-label theme-switcher-label d-flex align-items-center" for="themeSwitch">
-                    <i class="bi bi-moon-stars-fill theme-icon me-2"></i>
-                    <span class="theme-switcher-text">Modo Escuro</span>
+                    <i class="fa-solid fa-moon theme-icon fa-lg me-2"></i> <span class="theme-switcher-text">Modo
+                        Escuro</span>
                 </label>
                 <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
             </div>
@@ -70,8 +78,8 @@
                 <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
                     id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip"
                     data-bs-title="Opções do Usuário">
-                    <i class="bi bi-person-circle"></i>
-                    <strong><span><?= esc(session()->get('admin_first_name') ?: 'Admin') ?></span></strong>
+                    <i class="fa-solid fa-user fa-lg fa-fw"></i>
+                    <span class="fw-bold"><?= esc(session()->get('admin_first_name') ?: 'Admin') ?></span>
                 </a>
                 <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser">
                     <li><a class="dropdown-item disabled" href="#">Perfil (em breve)</a></li>
@@ -103,12 +111,11 @@
             <?= $this->renderSection('content') ?>
         </main>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
-
-    <script src="<?= base_url('js/template.js') ?>"></script> <?= $this->renderSection('scripts') ?>
+    <script src="<?= base_url('js/template.js') ?>"></script>
+    <?= $this->renderSection('scripts') ?>
 </body>
 
 </html>

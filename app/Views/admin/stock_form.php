@@ -88,10 +88,8 @@
                 expiresAtInput.value = ''; // Limpa o valor se não for código único
             }
         }
-
         // Verifica no carregamento da página (caso haja valor 'old')
         checkProductType();
-
         // Adiciona listener para mudanças no select
         productSelect.addEventListener('change', checkProductType);
     });
