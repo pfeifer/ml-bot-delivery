@@ -7,8 +7,7 @@
     <title><?= $this->renderSection('title') ?> - Admin ML Bot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="<?= base_url('css/template.css') ?>">
     <?= $this->renderSection('styles') ?>
 </head>
@@ -52,14 +51,22 @@
                     <span>Estoque</span>
                 </a>
             </li>
+            
             <li class="nav-item">
-                <a href="<?= route_to('admin.stock') ?>"
-                    class="nav-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/mercadolivre')) ? 'active' : 'link-body-emphasis' ?>">
+                <a href="<?= route_to('admin.mercadolivre.settings') ?>" 
+                   class="nav-link d-flex align-items-center 
+                        <?php // Ativa o link se estiver na página de settings OU nas páginas de CRUD de templates
+                        if (str_starts_with(uri_string(), 'admin/mercadolivre') || str_starts_with(uri_string(), 'admin/message-templates')) {
+                            echo 'active';
+                        } else {
+                            echo 'link-body-emphasis';
+                        } ?>
+                   ">
                     <i class="fa-solid fa-handshake-simple fa-lg fa-fw"></i>
                     <span>Mercado Livre</span>
                 </a>
-            </li>
-        </ul>
+                </li>
+            </ul>
 
         <div class="sidebar-footer">
             <a href="<?= route_to('logout') ?>" class="logout-link mb-2">
@@ -76,7 +83,7 @@
             </div>
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
-                    id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip"
+                    id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-placement="right"
                     data-bs-title="Opções do Usuário">
                     <i class="fa-solid fa-user fa-lg fa-fw"></i>
                     <span class="fw-bold"><?= esc(session()->get('admin_first_name') ?: 'Admin') ?></span>
@@ -94,8 +101,10 @@
                 <div class="ms-auto"> </div>
             </div>
         </nav>
-        <main class="content">
+        <main class="content p-4"> 
             <h1 class="mb-4"><?= $this->renderSection('page_title') ?></h1>
+            
+            <?php // Flashdata (Sucesso, Erro) ?>
             <?php if (session()->getFlashdata('success')): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <?= session()->getFlashdata('success') ?>
@@ -108,6 +117,22 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
+
+             <?php // Erros de Validação (vindos de redirect com ->with('errors'))
+                $validationErrors = session()->getFlashdata('errors');
+                if (!empty($validationErrors) && is_array($validationErrors)): ?>
+                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                      <h5 class="alert-heading">Erro de Validação</h5>
+                      <p>Por favor, corrija os problemas abaixo:</p>
+                     <ul>
+                         <?php foreach ($validationErrors as $error): ?>
+                             <li><?= esc($error) ?></li>
+                         <?php endforeach ?>
+                     </ul>
+                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                 </div>
+             <?php endif; ?>
+
             <?= $this->renderSection('content') ?>
         </main>
     </div>

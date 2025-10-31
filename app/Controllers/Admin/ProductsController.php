@@ -1,16 +1,19 @@
 <?php namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\ProductModel; // Importa o Model
+use App\Models\ProductModel;
+use App\Models\MessageTemplateModel; // << Import
 
 class ProductsController extends BaseController
 {
     protected $productModel;
+    protected $templateModel; // << Propriedade
 
     public function __construct()
     {
-        $this->productModel = new ProductModel(); // Instancia o Model
-        helper(['form']); // Carrega o helper de formulário
+        $this->productModel = new ProductModel();
+        $this->templateModel = new MessageTemplateModel(); // << Instanciar
+        helper(['form']);
     }
 
     /**
@@ -18,9 +21,9 @@ class ProductsController extends BaseController
      */
     public function index()
     {
-        $data['products'] = $this->productModel->orderBy('id', 'DESC')->findAll(); // Busca todos os produtos
+        $data['products'] = $this->productModel->orderBy('id', 'DESC')->findAll(); 
 
-        return view('admin/products_list', $data); // Passa os produtos para a view
+        return view('admin/products_list', $data);
     }
 
     /**
@@ -28,8 +31,11 @@ class ProductsController extends BaseController
      */
     public function new()
     {
-        // Você precisará criar a view 'admin/products_form'
-        return view('admin/products_form', ['action' => 'create', 'product' => null]); 
+        // Busca os templates disponíveis para o dropdown
+        $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
+        $data['action'] = 'create';
+        $data['product'] = null;
+        return view('admin/products_form', $data); // Passa os templates para a view
     }
 
     /**
@@ -39,27 +45,45 @@ class ProductsController extends BaseController
     {
         // --- Lógica de Validação ---
         $rules = [
-            'ml_item_id'   => 'required|is_unique[products.ml_item_id]|max_length[30]',
-            'title'        => 'permit_empty|max_length[255]',
-            'product_type' => 'required|in_list[unique_code,static_link]',
+            'ml_item_id'       => 'required|is_unique[products.ml_item_id]|max_length[30]',
+            'title'            => 'permit_empty|max_length[255]',
+            'product_type'     => 'required|in_list[unique_code,static_link]',
+            // Apenas checa se é um número > 0, se não for vazio
+            'message_template_id' => 'permit_empty|is_natural_no_zero', 
+        ];
+        
+        $templateId = $this->request->getPost('message_template_id');
+
+        // *** CORREÇÃO AQUI ***
+        // Adiciona a regra 'is_not_unique' APENAS se um ID foi enviado
+        if (!empty($templateId)) {
+            $rules['message_template_id'] .= '|is_not_unique[message_templates.id]';
+        }
+
+         $messages = [
+            'message_template_id' => [
+                'is_not_unique' => 'O template de mensagem selecionado não existe.'
+            ]
         ];
 
-        if (! $this->validate($rules)) {
+        if (! $this->validate($rules, $messages)) { // Passa $messages
              return redirect()->route('admin.products.new')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // --- Salvar no Banco ---
         $dataToSave = [
-            'ml_item_id'   => $this->request->getPost('ml_item_id'),
-            'title'        => $this->request->getPost('title'),
-            'product_type' => $this->request->getPost('product_type'),
-            // 'delivery_data' será tratado separadamente ou no form de estoque
+            'ml_item_id'       => $this->request->getPost('ml_item_id'),
+            'title'            => $this->request->getPost('title'),
+            'product_type'     => $this->request->getPost('product_type'),
+            // Salva NULL se o valor for vazio, senão salva o ID
+            'message_template_id' => empty($templateId) ? null : (int)$templateId,
         ];
 
         if ($this->productModel->insert($dataToSave)) {
             return redirect()->route('admin.products')->with('success', 'Produto cadastrado com sucesso!');
         } else {
-            return redirect()->route('admin.products.new')->withInput()->with('error', 'Erro ao salvar o produto.');
+            $errors = $this->productModel->errors() ?: ['database' => 'Erro desconhecido ao salvar o produto.'];
+            return redirect()->route('admin.products.new')->withInput()->with('errors', $errors);
         }
     }
 
@@ -72,8 +96,11 @@ class ProductsController extends BaseController
         if (!$product) {
              return redirect()->route('admin.products')->with('error', 'Produto não encontrado.');
         }
-        // Você precisará criar a view 'admin/products_form'
-        return view('admin/products_form', ['action' => 'update', 'product' => $product]);
+        // Busca os templates disponíveis para o dropdown
+        $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
+        $data['action'] = 'update';
+        $data['product'] = $product;
+        return view('admin/products_form', $data); // Passa templates e produto
     }
 
     /**
@@ -87,28 +114,45 @@ class ProductsController extends BaseController
         }
 
          // --- Lógica de Validação ---
-        // Cuidado com a regra is_unique ao atualizar!
          $rules = [
-            'ml_item_id'   => "required|is_unique[products.ml_item_id,id,{$id}]|max_length[30]", // Ignora o próprio ID
-            'title'        => 'permit_empty|max_length[255]',
-            'product_type' => 'required|in_list[unique_code,static_link]',
+            'ml_item_id'       => "required|is_unique[products.ml_item_id,id,{$id}]|max_length[30]",
+            'title'            => 'permit_empty|max_length[255]',
+            'product_type'     => 'required|in_list[unique_code,static_link]',
+             // Apenas checa se é um número > 0, se não for vazio
+            'message_template_id' => 'permit_empty|is_natural_no_zero',
+        ];
+        
+        $templateId = $this->request->getPost('message_template_id');
+
+        // *** CORREÇÃO AQUI ***
+        // Adiciona a regra 'is_not_unique' APENAS se um ID foi enviado
+        if (!empty($templateId)) {
+            $rules['message_template_id'] .= '|is_not_unique[message_templates.id]';
+        }
+        
+         $messages = [
+            'message_template_id' => [
+                'is_not_unique' => 'O template de mensagem selecionado não existe.'
+            ]
         ];
 
-         if (! $this->validate($rules)) {
+         if (! $this->validate($rules, $messages)) { // Passa $messages
              return redirect()->route('admin.products.edit', $id)->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // --- Atualizar no Banco ---
          $dataToUpdate = [
-            'ml_item_id'   => $this->request->getPost('ml_item_id'),
-            'title'        => $this->request->getPost('title'),
-            'product_type' => $this->request->getPost('product_type'),
+            'ml_item_id'       => $this->request->getPost('ml_item_id'),
+            'title'            => $this->request->getPost('title'),
+            'product_type'     => $this->request->getPost('product_type'),
+            'message_template_id' => empty($templateId) ? null : (int)$templateId, // Salva NULL se vazio
         ];
 
         if ($this->productModel->update($id, $dataToUpdate)) {
              return redirect()->route('admin.products')->with('success', 'Produto atualizado com sucesso!');
         } else {
-             return redirect()->route('admin.products.edit', $id)->withInput()->with('error', 'Erro ao atualizar o produto.');
+             $errors = $this->productModel->errors() ?: ['database' => 'Erro desconhecido ao atualizar o produto.'];
+             return redirect()->route('admin.products.edit', $id)->withInput()->with('errors', $errors);
         }
     }
 

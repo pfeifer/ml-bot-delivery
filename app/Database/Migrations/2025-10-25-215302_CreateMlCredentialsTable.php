@@ -3,7 +3,6 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
-use CodeIgniter\Database\RawSql; // Importar RawSql
 
 class CreateMlCredentialsTable extends Migration // Certifique-se que o nome da classe está correto
 {
@@ -22,7 +21,7 @@ class CreateMlCredentialsTable extends Migration // Certifique-se que o nome da 
                 'unique'     => true,
                 'default'    => 'default', // Ou pode deixar nulo se preferir
             ],
-            'seller_id' => [ // << NOVO CAMPO ADICIONADO AQUI
+            'seller_id' => [
                 'type'       => 'BIGINT',
                 'unsigned'   => true,
                 'null'       => true, // Permite ser nulo até ser preenchido pela API
@@ -64,19 +63,6 @@ class CreateMlCredentialsTable extends Migration // Certifique-se que o nome da 
         $this->forge->addKey('id', true);
         $this->forge->addKey('seller_id'); // Adiciona índice para seller_id
         $this->forge->createTable('ml_credentials');
-
-        // REMOVIDO: A inserção inicial é melhor feita via Seeder ou pela própria lógica do app
-        // para evitar dependência do .env durante a migração.
-        /*
-        $this->db->table('ml_credentials')->insert([
-            'key_name' => 'default',
-            // Não insira tokens aqui, eles devem ser obtidos via fluxo de autenticação
-            // 'access_token' => env('ml.accessToken'),
-            // 'refresh_token' => env('ml.refreshToken'),
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
-        */
     }
 
     public function down()

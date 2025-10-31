@@ -14,10 +14,26 @@ class CreateProductsTable extends Migration
             'title' => [ 'type' => 'VARCHAR', 'constraint' => '255', 'null' => true ], // Título do anúncio ML (referência)
             'product_type' => [ 'type' => 'ENUM', 'constraint' => ['unique_code', 'static_link'], 'null' => false ], // Tipo: 'unique_code' ou 'static_link'
             'delivery_data' => [ 'type' => 'TEXT', 'null' => true ], // Link estático (criptografado)
+            
+            // --- CAMPO ADICIONADO DIRETAMENTE AQUI ---
+            'message_template_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true, // Permite ser nulo
+            ],
+            // ----------------------------------------
+
             'created_at' => [ 'type' => 'DATETIME', 'null' => true ],
             'updated_at' => [ 'type' => 'DATETIME', 'null' => true ],
         ]);
         $this->forge->addKey('id', true);
+        
+        // Adicionamos a chave estrangeira aqui, mas sem a constraint ainda,
+        // porque a tabela 'message_templates' pode não existir neste ponto da migração.
+        // Vamos adicionar a constraint na migration de 'message_templates'.
+        $this->forge->addKey('message_template_id'); 
+        
         $this->forge->createTable('products'); // Nome da tabela: products
     }
 
