@@ -4,8 +4,8 @@
     --sidebar-width-collapsed: 80px;
     /* Ajuste se necessário */
     --transition-speed: 0.3s;
-    --sidebar-top-height: 55px;
-    /* Altura da linha superior colapsada */
+    --sidebar-top-height: 56px;
+    /* Altura da linha superior (correspondente à navbar) */
 }
 
 body {
@@ -31,78 +31,47 @@ body {
     width: var(--sidebar-width-collapsed);
 }
 
-/* Wrapper para header e toggle */
 .sidebar-top-wrapper {
     margin-bottom: 0.5rem;
-    /* Espaçamento abaixo no modo expandido */
     transition: margin var(--transition-speed) ease;
 }
 
-/* Header padrão (expandido) */
 .sidebar .sidebar-header {
-    margin-bottom: 0;
-    /* Wrapper controla a margem inferior */
+    /* Define altura fixa para alinhar com a navbar */
+    height: var(--sidebar-top-height);
     transition: padding var(--transition-speed) ease;
+}
+
+.sidebar .sidebar-header a {
+    /* d-flex e align-items-center já estão no HTML */
+    width: 100%;
+    /* Garante que o link ocupe o espaço */
+    height: 100%;
+    /* Garante que o link ocupe a altura */
+    transition: justify-content var(--transition-speed) ease;
 }
 
 .sidebar .sidebar-header a i {
     transition: margin var(--transition-speed) ease;
 }
 
-/* Toggle item padrão (expandido) */
-.sidebar .sidebar-toggle-item {
-    /* O margin-bottom foi movido para o wrapper */
-    margin-bottom: 0;
-    transition: padding var(--transition-speed) ease, margin var(--transition-speed) ease;
-}
+/* --- ESTADO COLAPSADO (Sidebar) --- */
 
-.sidebar .sidebar-toggle-item button.nav-link {
-    /* MUDANÇA: Ajustado para botão de ícone */
-    width: auto;
-    /* De 100% para auto */
-    justify-content: center;
-    /* De start para center */
-    border: none;
-    background-color: transparent;
-    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
-    transition: justify-content var(--transition-speed) ease, padding var(--transition-speed) ease;
-}
-
-.sidebar .sidebar-toggle-item button.nav-link:hover {
-    background-color: var(--bs-tertiary-bg);
-}
-
-.sidebar .sidebar-toggle-item button.nav-link i {
-    /* MUDANÇA: Removida margem, pois não há mais texto */
-    margin-right: 0;
-    vertical-align: middle;
-    transition: margin var(--transition-speed) ease;
-}
-
-/* --- ESTADO COLAPSADO --- */
-/* Wrapper vira Flex container */
+/* Adiciona margens negativas ao wrapper do header no modo colapsado */
 .sidebar.collapsed .sidebar-top-wrapper {
-    display: flex;
-    align-items: center;
-    /* Alinha verticalmente header e toggle */
-    height: var(--sidebar-top-height);
-    /* Define altura fixa */
-    margin-bottom: 0.5rem;
-    /* Mantém espaçamento abaixo */
-    padding: 0;
-    /* Remove padding interno do wrapper se houver */
+    margin-left: -1rem;
+    /* Anula o 'padding-left: 1rem' do p-3 */
+    margin-right: -1rem;
+    /* Anula o 'padding-right: 1rem' do p-3 */
 }
+
 
 /* Header colapsado */
 .sidebar.collapsed .sidebar-header {
-    flex: 1;
-    /* Ocupa metade do espaço */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
     padding: 0;
     margin: 0;
+    height: var(--sidebar-top-height);
+    /* Manter a altura */
 }
 
 .sidebar.collapsed .sidebar-header a {
@@ -110,52 +79,21 @@ body {
     margin: 0;
     height: 100%;
     width: 100%;
-    display: flex;
     justify-content: center;
-    align-items: center;
+    /* Centraliza o ícone */
+    /* 'align-items: center' já vem do HTML (d-flex align-items-center) */
 }
 
 .sidebar.collapsed .sidebar-header a span {
     display: none;
+    /* Esconde texto */
 }
 
-/* Esconde texto */
 .sidebar.collapsed .sidebar-header a i {
     margin: 0;
+    /* Remove margem do ícone */
 }
 
-/* Remove margem do ícone */
-/* Toggle item colapsado */
-.sidebar.collapsed .sidebar-toggle-item {
-    flex: 1;
-    /* Ocupa a outra metade */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar.collapsed .sidebar-toggle-item button.nav-link {
-    padding: 0.5rem;
-    width: auto;
-    height: auto;
-    justify-content: center;
-    align-items: center;
-    min-height: 0;
-}
-
-.sidebar.collapsed .sidebar-toggle-item button.nav-link span {
-    display: none;
-}
-
-/* Esconde texto */
-.sidebar.collapsed .sidebar-toggle-item button.nav-link i {
-    margin: 0;
-}
-
-/* Remove margem do ícone */
 /* Esconde texto dos outros elementos quando colapsado */
 .sidebar.collapsed .nav-link span:not(.toggle-text),
 .sidebar.collapsed .dropdown-toggle span,
@@ -164,11 +102,12 @@ body {
     display: none;
 }
 
-/* Centraliza ÍCONES dos outros links e rodapé */
+/* --- MUDANÇA CRÍTICA AQUI --- */
+/* Esta regra agora se aplica a TUDO que precisa ser centralizado */
 .sidebar.collapsed .nav-pills .nav-link,
-/* Links da lista UL */
-.sidebar.collapsed .dropdown-toggle,
-.sidebar.collapsed .logout-link {
+.sidebar.collapsed .logout-link,
+.sidebar.collapsed .theme-switcher-container,
+.sidebar.collapsed .dropdown { /* <-- Alvo no .dropdown, não no .dropdown-toggle */
     justify-content: center;
     align-items: center;
     padding-top: 0.75rem;
@@ -178,10 +117,21 @@ body {
     min-height: 50px;
     height: auto;
     width: 100%;
+    /* O dropdown é um d-flex, mas os outros não. */
+    /* Adicionamos d-flex para garantir que 'justify-content' funcione */
+    display: flex; 
 }
 
-/* Faz com que a lista de navegação ocupe toda a largura, 
-   quebrando o padding horizontal (p-3) do sidebar colapsado */
+/* O .dropdown-toggle (o link <a>) dentro do .dropdown tbm precisa se justificar */
+.sidebar.collapsed .dropdown .dropdown-toggle {
+     width: 100%;
+     justify-content: center; /* Centraliza o <i> */
+     /* 'd-flex' e 'align-items-center' já vêm do HTML */
+}
+/* --- FIM DA MUDANÇA --- */
+
+
+/* Faz com que a lista de navegação ocupe toda a largura */
 .sidebar.collapsed .nav-pills {
     margin-left: -1rem;
     /* Anula o 'padding-left: 1rem' do p-3 */
@@ -189,25 +139,17 @@ body {
     /* Anula o 'padding-right: 1rem' do p-3 */
 }
 
-/* Remove margem dos ícones nesses outros links */
-.sidebar.collapsed .nav-pills .nav-link i[class*="fa-"],
-.sidebar.collapsed .dropdown-toggle i[class*="fa-"],
+/* Adiciona margens negativas ao footer para alinhar os ícones */
+.sidebar.collapsed .sidebar-footer {
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
 /* Remove margem dos ícones nesses outros links */
 .sidebar.collapsed .nav-pills .nav-link i[class*="fa-"],
 .sidebar.collapsed .dropdown-toggle i[class*="fa-"],
 .sidebar.collapsed .logout-link i[class*="fa-"] {
     margin: 0;
-}
-
-/* Centraliza o switch quando colapsado */
-.sidebar.collapsed .theme-switcher-container {
-    justify-content: center !important;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: transparent !important;
-    border: none;
-    min-height: 50px;
-    /* Consistência */
 }
 
 .sidebar.collapsed .theme-switcher-label span,
@@ -242,6 +184,15 @@ body {
     transition: margin var(--transition-speed) ease;
 }
 
+/* Alinhamento do ícone do tema */
+.sidebar .theme-switcher-label i.theme-icon {
+    /* A classe fa-fw já cuida da largura */
+    margin-right: 8px;
+    /* Adiciona a margem para o texto */
+    vertical-align: middle;
+    transition: margin var(--transition-speed) ease;
+}
+
 /* Ícones em dropdowns e botões (fora da sidebar) */
 .dropdown-item i[class*="fa-"] {
     margin-right: 8px;
@@ -272,8 +223,35 @@ body.sidebar-collapsed .main-content {
 
 .navbar {
     border-bottom: 1px solid var(--bs-border-color);
-    min-height: 56px;
+    /* Alinhar com a altura do header da sidebar */
+    height: var(--sidebar-top-height);
+    min-height: var(--sidebar-top-height);
+    /* Força a altura */
 }
+
+/* Forçar alinhamento na Navbar */
+.navbar .container-fluid {
+    height: 100%;
+    /* Garante que o container-fluid use a altura total */
+}
+
+/* Garante que o brand não tenha margens que atrapalhem o alinhamento */
+.navbar .navbar-brand {
+    margin-bottom: 0;
+    /* Remove a margem 'mb-0' se 'h1' a estiver sobrepondo */
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Garante que o botão toggle se alinhe */
+.navbar #sidebarToggle {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 100%;
+    /* Faz o botão tentar ocupar a altura */
+    /* O 'align-items-center' no HTML deve centralizar o ícone */
+}
+
 
 /* Rodapé da Sidebar */
 .sidebar-footer {
@@ -327,14 +305,7 @@ body.sidebar-collapsed .main-content {
 }
 
 /* Dropdown Usuário no Rodapé Colapsado */
-.sidebar.collapsed .dropdown>a {
-    justify-content: center;
-    align-items: center;
-    padding: 0.75rem 0;
-    min-height: 50px;
-    width: 100%;
-}
-
+/* A regra unificada acima já cuida do 'div.dropdown' */
 .sidebar.collapsed .dropdown>a i {
     margin: 0;
 }
@@ -348,4 +319,10 @@ body .tooltip .tooltip-inner {
 body .tooltip.bs-tooltip-auto[data-popper-placement^=right] .tooltip-arrow::before,
 body .tooltip.bs-tooltip-end .tooltip-arrow::before {
     border-right-color: var(--bs-emphasis-color);
+}
+
+/* Tooltip para a navbar */
+body .tooltip.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before,
+body .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: var(--bs-emphasis-color);
 }

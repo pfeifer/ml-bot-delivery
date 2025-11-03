@@ -5,6 +5,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleButton = document.getElementById('sidebarToggle');
     const body = document.body;
     const sidebarStateKey = 'sidebarCollapsedState';
+
+    // --- MUDANÇA: Adicionado 'fa-lg' e 'fa-fw' aos ícones ---
+    const iconExpanded = 'fa-solid fa-bars-staggered fa-flip-horizontal fa-lg fa-fw';
+    const iconCollapsed = 'fa-solid fa-bars-staggered fa-lg fa-fw';
+
+    // --- Nova função para atualizar o ícone ---
+    function updateToggleIcon() {
+        if (!toggleButton || !sidebar) return;
+        const icon = toggleButton.querySelector('i');
+        if (!icon) return;
+
+        // Limpa classes de ícone antigas (incluindo as de ícones anteriores)
+        icon.className = ''; 
+
+        if (sidebar.classList.contains('collapsed')) {
+            // Adiciona classes do ícone "recolhido"
+            icon.classList.add(...iconCollapsed.split(' '));
+        } else {
+            // Adiciona classes do ícone "expandido"
+            icon.classList.add(...iconExpanded.split(' '));
+        }
+    }
+    // --- FIM DA MUDANÇA ---
+
     // Função para obter a duração da transição CSS (se definida)
     function getTransitionDuration(element) {
         const style = window.getComputedStyle(element);
@@ -13,18 +37,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const duration = parseFloat(durationString) * (durationString.includes('ms') ? 1 : 1000);
         return duration;
     }
-    // Função para alternar a sidebar
+    
+    // --- Função de toggle atualizada ---
     function toggleSidebar() {
         if (!sidebar || !body || !toggleButton) return; // Verifica se os elementos existem
 
         sidebar.classList.toggle('collapsed');
         body.classList.toggle('sidebar-collapsed');
         localStorage.setItem(sidebarStateKey, sidebar.classList.contains('collapsed'));
+        
+        // Atualiza o ícone
+        updateToggleIcon();
+
         // Re-inicializa os tooltips após um pequeno delay para a animação CSS
         // Usa a duração da transição + um pequeno buffer
         const delay = getTransitionDuration(sidebar) + 50;
         setTimeout(initializeTooltips, delay);
     }
+
     // Verifica o estado inicial da sidebar no carregamento
     if (localStorage.getItem(sidebarStateKey) === 'true') {
         if (sidebar && body) {
@@ -32,10 +62,15 @@ document.addEventListener('DOMContentLoaded', function () {
             body.classList.add('sidebar-collapsed');
         }
     }
+
+    // --- Atualiza o ícone no carregamento da página ---
+    updateToggleIcon();
+
     // Adiciona o evento de clique ao botão, se ele existir
     if (toggleButton) {
         toggleButton.addEventListener('click', toggleSidebar);
     }
+    
     // --- Lógica dos Tooltips ---
     let tooltipInstances = [];
     function initializeTooltips() {
@@ -48,10 +83,32 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         // Seleciona todos os elementos elegíveis para tooltip na sidebar
-        const tooltipTriggerList = sidebar ? sidebar.querySelectorAll('.nav-pills .nav-link, .logout-link, #dropdownUser, #sidebarToggle') : [];
+        const tooltipTriggerList = sidebar ? sidebar.querySelectorAll('.nav-pills .nav-link, .logout-link, #dropdownUser') : []; // Removido #sidebarToggle daqui
+        
+        // Seleciona o botão de toggle separadamente
+        const toggleButtonTooltip = document.getElementById('sidebarToggle');
+        
+        // Lógica para o botão de toggle (agora na navbar)
+        if (toggleButtonTooltip) {
+             // Destroi tooltip antigo se existir
+            const oldTooltip = bootstrap.Tooltip.getInstance(toggleButtonTooltip);
+            if (oldTooltip) {
+                oldTooltip.dispose();
+            }
+            
+            // Define o texto dinâmico
+            const titleText = sidebar.classList.contains('collapsed') ? 'Expandir Menu' : 'Recolher Menu';
+            toggleButtonTooltip.setAttribute('data-bs-toggle', 'tooltip');
+            toggleButtonTooltip.setAttribute('data-bs-placement', 'bottom'); // Melhor 'bottom' na navbar
+            toggleButtonTooltip.setAttribute('data-bs-trigger', 'hover');
+            toggleButtonTooltip.setAttribute('data-bs-title', titleText);
+            toggleButtonTooltip.removeAttribute('title');
+            tooltipInstances.push(new bootstrap.Tooltip(toggleButtonTooltip));
+        }
+
 
         if (sidebar && sidebar.classList.contains('collapsed')) {
-            // Sidebar Colapsada: Ativa tooltips
+            // Sidebar Colapsada: Ativa tooltips (dos links da sidebar)
             tooltipTriggerList.forEach(tooltipTriggerEl => {
                 let titleText = '';
                 // Tenta pegar o texto de dentro do elemento (span)
@@ -59,12 +116,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (textElement) {
                     titleText = textElement.textContent.trim();
                 }
+                
                 // Casos especiais ou fallback para atributos
-                if (tooltipTriggerEl.id === 'sidebarToggle') {
-                    // Texto do botão toggle depende do estado atual
-                    // ESTA LÓGICA AGORA FORNECE O TEXTO PARA O *TOOLTIP*
-                    titleText = sidebar.classList.contains('collapsed') ? 'Expandir Menu' : 'Recolher Menu';
-                } else if (tooltipTriggerEl.id === 'dropdownUser' && !titleText) {
+                // (Removida a lógica do #sidebarToggle daqui)
+                if (tooltipTriggerEl.id === 'dropdownUser' && !titleText) {
                     // Fallback específico para o dropdown do usuário
                     titleText = tooltipTriggerEl.getAttribute('data-bs-title') || 'Opções do Usuário';
                 } else if (!titleText && tooltipTriggerEl.hasAttribute('data-bs-title')) {
@@ -89,20 +144,16 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             // Sidebar Expandida: Desativa a maioria dos tooltips
             tooltipTriggerList.forEach(tooltipTriggerEl => {
-                // MANTÉM tooltip para o #sidebarToggle e #dropdownUser
-                const keepTooltip = (tooltipTriggerEl.id === 'dropdownUser' || tooltipTriggerEl.id === 'sidebarToggle');
+                // MANTÉM tooltip para o #dropdownUser
+                const keepTooltip = (tooltipTriggerEl.id === 'dropdownUser'); // Removido #sidebarToggle
 
                 const tooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
                 if (tooltip && !keepTooltip) {
                     tooltip.dispose(); // Destroi se não for para manter
                 } else if (keepTooltip && tooltip) {
                     tooltipInstances.push(tooltip);
-                } else if (keepTooltip && !tooltip && (tooltipTriggerEl.hasAttribute('data-bs-title') || tooltipTriggerEl.id === 'sidebarToggle')) {
+                } else if (keepTooltip && !tooltip && tooltipTriggerEl.hasAttribute('data-bs-title')) {
                     // Se for para manter E não existe, cria (para garantir)
-                    // Lógica especial para o sidebarToggle que pega o texto dinamicamente
-                    if (tooltipTriggerEl.id === 'sidebarToggle') {
-                        tooltipTriggerEl.setAttribute('data-bs-title', sidebar.classList.contains('collapsed') ? 'Expandir Menu' : 'Recolher Menu');
-                    }
                     tooltipInstances.push(new bootstrap.Tooltip(tooltipTriggerEl));
                 }
                 if (!keepTooltip) {
@@ -193,3 +244,113 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 })();
+
+// --- Início da Lógica de Navegação AJAX (sem modificações) ---
+document.addEventListener('DOMContentLoaded', function () {
+    // Esta parte do código depende do jQuery, que é carregado no template.
+    // O listener 'DOMContentLoaded' garante que o DOM está pronto,
+    // mas o jQuery pode ainda não estar. Vamos colocar a lógica AJAX
+    // dentro de um segundo 'DOMContentLoaded' e verificar o jQuery.
+
+    // Verifica se o jQuery está carregado
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery não está carregado. A navegação AJAX foi desabilitada.');
+        return;
+    }
+
+    (function($) { // Wrapper do jQuery
+        
+        // Interceptar cliques nos links da sidebar que marcamos
+        $('#adminSidebar').on('click', 'a.ajax-link', function (e) {
+            e.preventDefault(); // Impedir o carregamento da página inteira
+            
+            var $link = $(this);
+            var url = $link.attr('href');
+
+            // Ignorar se o link já estiver ativo
+            if ($link.hasClass('active') && !url.includes('#')) { // Permite abas (que usam #)
+                return;
+            }
+            
+            // Selecionar os containers de conteúdo
+            var $contentContainer = $('main.content');
+            var $pageTitle = $('h1.mb-4'); // Seleciona o H1 do título da página
+
+            // Mostrar um spinner de loading
+            $pageTitle.text('Carregando...');
+            $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+
+            // Fazer a requisição AJAX
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'html', // Esperamos receber a página HTML completa
+                success: function (responseHtml) {
+                    // Coloca a resposta (HTML completo) em um div temporário
+                    var $newHtml = $('<div>').html(responseHtml);
+
+                    // Encontrar o novo título, conteúdo e scripts da página de resposta
+                    var newTitle = $newHtml.find('h1.mb-4').html();
+                    var newContent = $newHtml.find('main.content').html();
+                    var newScripts = $newHtml.find('#ajax-scripts').html(); // Pega o conteúdo do nosso container
+
+                    if (newContent) {
+                        // 1. Atualizar o título e o conteúdo da página atual
+                        $pageTitle.html(newTitle);
+                        $contentContainer.html(newContent);
+
+                        // 2. Atualizar o estado 'active' na sidebar
+                        $('#adminSidebar .nav-pills a.active').removeClass('active').addClass('link-body-emphasis');
+                        $link.addClass('active').removeClass('link-body-emphasis');
+
+                        // 3. Atualizar a URL na barra de endereços (para deep-linking e botão voltar)
+                        history.pushState({ path: url }, '', url);
+
+                        // 4. Atualizar o <title> da aba do navegador
+                        var newPageTitle = $newHtml.find('title').text();
+                        if (newPageTitle) {
+                            document.title = newPageTitle;
+                        }
+                        
+                        // 5. Remover scripts AJAX antigos (se existirem)
+                        $('#ajax-scripts-container').remove();
+                        
+                        // 6. Adicionar e executar os novos scripts (MUITO IMPORTANTE para DataTables)
+                        if (newScripts) {
+                            // Criamos um novo container de script e o adicionamos
+                            var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
+                            $('body').append($scriptContainer);
+                        }
+                        
+                        // 7. (Opcional) Rolar para o topo da área de conteúdo
+                        $contentContainer.scrollTop(0);
+
+                    } else {
+                        // Fallback: Se não conseguir "parsear" o conteúdo (ex: erro de login/redirect)
+                        window.location.href = url;
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Erro no AJAX:', textStatus, errorThrown);
+                    // Se falhar (ex: sessão expirou e foi redirecionado pro login),
+                    // apenas recarrega a página inteira.
+                    window.location.href = url;
+                }
+            });
+        });
+
+        // Lidar com o botão "Voltar" e "Avançar" do navegador
+        $(window).on('popstate', function(e) {
+            // Se o usuário clicar em "voltar", força um reload completo da URL de destino
+            // (É mais simples do que recarregar o estado AJAX anterior)
+            if (e.originalEvent.state && e.originalEvent.state.path) {
+                 window.location.href = e.originalEvent.state.path;
+            } else {
+                 location.reload();
+            }
+        });
+
+    })(jQuery);
+
+});
+// --- Fim da Lógica de Navegação AJAX ---

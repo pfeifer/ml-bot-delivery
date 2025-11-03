@@ -20,36 +20,30 @@
         <div class="sidebar-top-wrapper">
             <div class="sidebar-header d-flex align-items-center">
                 <a href="<?= route_to('admin.dashboard') ?>"
-                    class="link-body-emphasis text-decoration-none d-flex align-items-center me-2">
+                    class="link-body-emphasis text-decoration-none d-flex align-items-center">
                     <i class="fa-solid fa-robot fa-lg fa-fw"></i>
                     <span class="fs-5 ms-2">ML Bot Admin</span>
                 </a>
-                <div class="sidebar-toggle-item nav-item ms-auto">
-                    <button class="nav-link link-body-emphasis d-flex align-items-center" type="button"
-                        id="sidebarToggle">
-                        <i class="fa-solid fa-bars fa-fw"></i>
-                    </button>
-                </div>
             </div>
         </div>
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="<?= route_to('admin.dashboard') ?>"
-                    class="nav-link d-flex align-items-center <?= (uri_string() === 'admin') ? 'active' : 'link-body-emphasis' ?>">
+                    class="nav-link ajax-link d-flex align-items-center <?= (uri_string() === 'admin') ? 'active' : 'link-body-emphasis' ?>">
                     <i class="fa-solid fa-gauge fa-lg fa-fw"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="<?= route_to('admin.products') ?>"
-                    class="nav-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/products')) ? 'active' : 'link-body-emphasis' ?>">
+                    class="nav-link ajax-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/products')) ? 'active' : 'link-body-emphasis' ?>">
                     <i class="fa-solid fa-box fa-lg fa-fw"></i>
                     <span>Produtos</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="<?= route_to('admin.stock') ?>"
-                    class="nav-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/stock')) ? 'active' : 'link-body-emphasis' ?>">
+                    class="nav-link ajax-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/stock')) ? 'active' : 'link-body-emphasis' ?>">
                     <i class="fa-solid fa-boxes-stacked fa-lg fa-fw"></i>
                     <span>Estoque</span>
                 </a>
@@ -57,7 +51,7 @@
             
             <li class="nav-item">
                 <a href="<?= route_to('admin.mercadolivre.settings') ?>" 
-                   class="nav-link d-flex align-items-center 
+                   class="nav-link ajax-link d-flex align-items-center 
                         <?php // Ativa o link se estiver na página de settings OU nas páginas de CRUD de templates
                         if (str_starts_with(uri_string(), 'admin/mercadolivre') || str_starts_with(uri_string(), 'admin/message-templates')) {
                             echo 'active';
@@ -79,8 +73,10 @@
             <div
                 class="form-check form-switch mb-3 d-flex align-items-center justify-content-between theme-switcher-container p-2 rounded">
                 <label class="form-check-label theme-switcher-label d-flex align-items-center" for="themeSwitch">
-                    <i class="fa-solid fa-moon theme-icon fa-lg me-2"></i> <span class="theme-switcher-text">Modo
-                        Escuro</span>
+                    
+                    <i class="fa-solid fa-moon theme-icon fa-lg fa-fw"></i> 
+                    
+                    <span class="theme-switcher-text">Modo Escuro</span>
                 </label>
                 <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
             </div>
@@ -99,7 +95,13 @@
     </nav>
     <div class="main-content">
         <nav class="navbar navbar-expand navbar-light bg-body-tertiary">
-            <div class="container-fluid">
+            <div class="container-fluid align-items-center">
+            
+                <button class="nav-link link-body-emphasis d-flex align-items-center me-3" type="button"
+                    id="sidebarToggle">
+                    <i class="fa-solid"></i>
+                </button>
+
                 <span class="navbar-brand mb-0 h1 ms-2 d-none d-md-inline">ML Bot Delivery</span>
                 <div class="ms-auto"> </div>
             </div>
@@ -117,7 +119,7 @@
             <?php if (session()->getFlashdata('error')): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <?= session()->getFlashdata('error') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button typebutton" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
 
@@ -151,7 +153,9 @@
 
     <script src="<?= base_url('js/template.js') ?>"></script>
     
-    <?= $this->renderSection('scripts') ?>
+    <div id="ajax-scripts">
+        <?= $this->renderSection('scripts') ?>
+    </div>
 </body>
 
 </html>
