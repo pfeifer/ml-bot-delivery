@@ -112,4 +112,51 @@ class MessageTemplatesController extends BaseController
             return redirect()->route('admin.mercadolivre.settings')->with('error', 'Erro ao excluir o template.');
         }
     }
+
+    /**
+     * Exclui um template em massa.
+     */
+    public function deleteBatch()
+    {
+        $ids = $this->request->getPost('selected_ids');
+
+        if (empty($ids) || !is_array($ids)) {
+            return redirect()->route('admin.mercadolivre.settings')->with('error', 'Nenhum template selecionado para exclusão.');
+        }
+
+        // --- PROTEÇÃO CRÍTICA: Impedir exclusão do ID 1 ---
+        $filteredIds = [];
+        $skippedDefault = false;
+        foreach ($ids as $id) {
+            if ((int)$id !== 1) {
+                $filteredIds[] = (int)$id;
+            } else {
+                $skippedDefault = true;
+            }
+        }
+        // ----------------------------------------------------
+
+        if (empty($filteredIds)) {
+             $message = $skippedDefault ? 'Não é possível excluir o Template Padrão (ID 1).' : 'Nenhum template válido selecionado.';
+            return redirect()->route('admin.mercadolivre.settings')->with('error', $message);
+        }
+
+        try {
+            $this->templateModel->whereIn('id', $filteredIds)->delete();
+            
+            $count = count($filteredIds);
+            $successMessage = $count . ' template(s) excluído(s) com sucesso!';
+            
+            if ($skippedDefault) {
+                // Se tentou excluir o 1, avisa que ele foi pulado
+                session()->setFlashdata('error', 'O "Template Padrão" (ID 1) não pode ser excluído e foi ignorado.');
+            }
+            
+            return redirect()->route('admin.mercadolivre.settings')->with('success', $successMessage);
+        
+        } catch (\Exception $e) {
+            log_message('error', 'Erro ao excluir templates em massa: ' . $e->getMessage());
+            return redirect()->route('admin.mercadolivre.settings')->with('error', 'Ocorreu um erro ao tentar excluir os templates.');
+        }
+    }
 }

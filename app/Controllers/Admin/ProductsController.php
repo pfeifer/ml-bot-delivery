@@ -172,4 +172,28 @@ class ProductsController extends BaseController
              return redirect()->route('admin.products')->with('error', 'Erro ao excluir o produto.');
         }
     }
+
+    /**
+     * Processa a exclusão em massa de produtos.
+     */
+    public function deleteBatch()
+    {
+        // Pega os IDs enviados pelo formulário (array 'selected_ids[]')
+        $ids = $this->request->getPost('selected_ids');
+
+        if (empty($ids) || !is_array($ids)) {
+            return redirect()->route('admin.products')->with('error', 'Nenhum produto selecionado para exclusão.');
+        }
+
+        try {
+            // Usa o 'whereIn' do Model para deletar todos os IDs de uma vez
+            $this->productModel->whereIn('id', $ids)->delete();
+            $count = count($ids);
+            return redirect()->route('admin.products')->with('success', $count . ' produto(s) excluído(s) com sucesso!');
+        
+        } catch (\Exception $e) {
+            log_message('error', 'Erro ao excluir produtos em massa: ' . $e->getMessage());
+            return redirect()->route('admin.products')->with('error', 'Ocorreu um erro ao tentar excluir os produtos.');
+        }
+    }
 }

@@ -34,70 +34,68 @@
             
             <p>Gerencie os templates de mensagem. O "Template Padrão (ID #1)" será usado se nenhum for especificado no cadastro do produto.</p>
 
-            <div class="mb-3">
-                <a href="<?= route_to('admin.message_templates.new') ?>" class="btn btn-success">
-                    <i class="fa-solid fa-plus fa-fw"></i>
-                    Adicionar Novo Template
-                </a>
-            </div>
+            <form method="POST" action="<?= route_to('admin.message_templates.delete.batch') ?>" id="batchDeleteTemplatesForm">
+                <?= csrf_field() ?>
 
-            <?php if (!empty($templates) && is_array($templates)): ?>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome Identificador</th>
-                                <th>Conteúdo (Início)</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($templates as $template): ?>
+                <div class="mb-3">
+                    <a href="<?= route_to('admin.message_templates.new') ?>" class="btn btn-success">
+                        <i class="fa-solid fa-plus fa-fw"></i>
+                        Adicionar Novo Template
+                    </a>
+                    <button type="button" class="btn btn-outline-primary" id="editSelectedTemplateBtn">
+                        <i class="fa-solid fa-pencil fa-fw"></i>
+                        Editar Selecionado
+                    </button>
+                    <button type="submit" class="btn btn-outline-danger" id="deleteSelectedTemplateBtn" 
+                            onclick="return confirm('Tem certeza que deseja excluir os templates selecionados?\n\nO Template Padrão (ID 1) não pode ser excluído.');">
+                        <i class="fa-solid fa-trash fa-fw"></i>
+                        Excluir Selecionados
+                    </button>
+                </div>
+
+                <?php if (!empty($templates) && is_array($templates)): ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="templatesTable">
+                            <thead class="table-dark">
                                 <tr>
-                                    <td><?= esc($template->id) ?></td>
-                                    <td>
-                                        <?= esc($template->name) ?>
-                                        
-                                        <?php // *** CORREÇÃO AQUI: Adiciona badge "Padrão" *** ?>
-                                        <?php if ($template->id == 1): ?>
-                                            <span class="badge bg-primary ms-2">Padrão</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><?= esc(substr($template->content, 0, 100)) . (strlen($template->content) > 100 ? '...' : '') ?></td>
-                                    <td>
-                                        <a href="<?= route_to('admin.message_templates.edit', $template->id) ?>"
-                                            class="btn btn-sm btn-outline-secondary" title="Editar">
-                                            <i class="fa-solid fa-pencil fa-fw"></i> Editar
-                                        </a>
-                                        
-                                        <?php // *** CORREÇÃO AQUI: Desabilita botão de excluir para o ID 1 *** ?>
-                                        <?php if ($template->id != 1): ?>
-                                            <a href="<?= route_to('admin.message_templates.delete', $template->id) ?>"
-                                                class="btn btn-sm btn-outline-danger" title="Excluir"
-                                                onclick="return confirm('Tem certeza que deseja excluir o template \'<?= esc($template->name, 'js') ?>\'?');">
-                                                <i class="fa-solid fa-trash fa-fw"></i> Excluir
-                                            </a>
-                                        <?php else: ?>
-                                            <button class="btn btn-sm btn-outline-danger" disabled title="Não é possível excluir o template padrão">
-                                                <i class="fa-solid fa-trash fa-fw"></i> Excluir
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php // *** FIM DA CORREÇÃO *** ?>
-                                    </td>
+                                    <th style="width: 20px;">
+                                        <input class="form-check-input" type="checkbox" id="selectAllTemplates">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>Nome Identificador</th>
+                                    <th>Conteúdo (Início)</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <div class="alert alert-warning" role="alert">
-                    Nenhum template de mensagem cadastrado (nem mesmo o Padrão).
-                    <strong>Execute o seeder:</strong> `php spark db:seed DefaultMessageTemplateSeeder`
-                </div>
-            <?php endif; ?>
-
-        </div>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($templates as $template): ?>
+                                    <tr>
+                                        <td>
+                                            <input class="form-check-input row-checkbox-template" type="checkbox" 
+                                                   name="selected_ids[]" value="<?= esc($template->id) ?>" 
+                                                   <?= ($template->id == 1) ? 'disabled' : '' ?>>
+                                        </td>
+                                        <td><?= esc($template->id) ?></td>
+                                        <td>
+                                            <?= esc($template->name) ?>
+                                            
+                                            <?php if ($template->id == 1): ?>
+                                                <span class="badge bg-primary ms-2">Padrão</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= esc(substr($template->content, 0, 100)) . (strlen($template->content) > 100 ? '...' : '') ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-warning" role="alert">
+                        Nenhum template de mensagem cadastrado (nem mesmo o Padrão).
+                        <strong>Execute o seeder:</strong> `php spark db:seed DefaultMessageTemplateSeeder`
+                    </div>
+                <?php endif; ?>
+            
+            </form> </div>
     </div>
 
     <div class="tab-pane fade" id="tab-credentials" role="tabpanel" aria-labelledby="credentials-tab" tabindex="0">
@@ -116,4 +114,68 @@
 
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    $(document).ready(function () {
+        // 1. Inicializa o DataTables para Templates
+        const templatesTable = new DataTable('#templatesTable', {
+            "columnDefs": [
+                {
+                    "targets": 0, // Coluna do checkbox
+                    "orderable": false,
+                    "searchable": false
+                }
+            ],
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json"
+            },
+            "order": [[ 1, "asc" ]] // Ordenar por ID (coluna 1) ascendente
+        });
+
+        // 2. Lógica "Selecionar Todos" para Templates
+        $('#selectAllTemplates').on('click', function () {
+            const isChecked = $(this).prop('checked');
+            // Seleciona todos, exceto os desabilitados (ID 1)
+            templatesTable.rows().nodes().to$().find('.row-checkbox-template:not(:disabled)').prop('checked', isChecked);
+        });
+
+        // 3. Desmarcar "Selecionar Todos"
+        $('#templatesTable tbody').on('change', '.row-checkbox-template', function () {
+            if (!$(this).prop('checked')) {
+                $('#selectAllTemplates').prop('checked', false);
+            }
+        });
+
+        // 4. Lógica "Editar Selecionado" para Templates
+        $('#editSelectedTemplateBtn').on('click', function() {
+            const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
+            
+            if (selected.length === 0) {
+                alert('Por favor, selecione um template para editar.');
+                return;
+            }
+            if (selected.length > 1) {
+                alert('Você só pode editar um template por vez.');
+                return;
+            }
+            
+            const templateId = selected.val();
+            const editUrl = '<?= rtrim(route_to('admin.message_templates.edit', 1), '1') ?>' + templateId;
+            window.location.href = editUrl;
+        });
+
+        // 5. Lógica "Excluir Selecionados" para Templates
+        $('#batchDeleteTemplatesForm').on('submit', function(e) {
+            const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
+            if (selected.length === 0) {
+                alert('Por favor, selecione pelo menos um template para excluir.');
+                e.preventDefault();
+                return false;
+            }
+            // A confirmação já está no botão
+        });
+    });
+</script>
 <?= $this->endSection() ?>

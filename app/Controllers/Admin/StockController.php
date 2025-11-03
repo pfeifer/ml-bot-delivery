@@ -20,12 +20,29 @@ class StockController extends BaseController
     }
 
     /**
-     * Mostra o formulário para adicionar estoque.
+     * Lista todos os códigos de estoque.
      */
     public function index()
     {
+        // Busca os códigos e junta com os produtos para pegar o nome
+        $data['codes'] = $this->stockCodeModel
+            ->select('stock_codes.*, products.title, products.ml_item_id, products.id as product_id') // Garante product_id
+            ->join('products', 'products.id = stock_codes.product_id', 'left')
+            ->orderBy('stock_codes.id', 'DESC')
+            ->findAll();
+
+        return view('admin/stock_list', $data); // Carrega a nova view de listagem
+    }
+
+
+    /**
+     * Mostra o formulário para adicionar estoque.
+     * (Anteriormente era 'index')
+     */
+    public function new()
+    {
         $data['productsForStock'] = $this->productModel->orderBy('title', 'ASC')->findAll();
-        return view('admin/stock_form', $data);
+        return view('admin/stock_form', $data); // Carrega a view do formulário
     }
 
     /**
@@ -46,8 +63,8 @@ class StockController extends BaseController
             if (!$product)
                 $errors['product_id'] = 'Produto selecionado é inválido.';
 
-            // Retorna para a rota nomeada 'admin.stock' (que é a index deste controller)
-            return redirect()->route('admin.stock')->withInput()->with('errors', $errors);
+            // Retorna para a rota nomeada 'admin.stock.new' (o formulário)
+            return redirect()->route('admin.stock.new')->withInput()->with('errors', $errors);
         }
 
         $productId = $product->id;
@@ -105,16 +122,60 @@ class StockController extends BaseController
             }
 
             if ($insertedCount > 0) {
+                // Redireciona para a LISTA de estoque
                 return redirect()->route('admin.stock')->with('success', $insertedCount . ' item(s) de estoque adicionado(s) com sucesso!');
             } else {
                 // Usa with('error', ...) para mensagens de erro
-                return redirect()->route('admin.stock')->withInput()->with('error', 'Nenhum item adicionado. ' . implode(' ', $errorMessages));
+                return redirect()->route('admin.stock.new')->withInput()->with('error', 'Nenhum item adicionado. ' . implode(' ', $errorMessages));
             }
 
         } catch (\Throwable $e) {
             log_message('error', '[StockController::add] Erro: ' . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
             // Usa with('error', ...) para mensagens de erro
-            return redirect()->route('admin.stock')->withInput()->with('error', 'Ocorreu um erro interno ao adicionar o estoque: ' . $e->getMessage());
+            return redirect()->route('admin.stock.new')->withInput()->with('error', 'Ocorreu um erro interno ao adicionar o estoque: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Processa a exclusão em massa de códigos de estoque.
+     */
+    public function deleteBatch()
+    {
+        $ids = $this->request->getPost('selected_ids');
+
+        if (empty($ids) || !is_array($ids)) {
+            return redirect()->route('admin.stock')->with('error', 'Nenhum código selecionado para exclusão.');
+        }
+
+        try {
+            // CAMADA DE SEGURANÇA:
+            // Busca no DB APENAS os IDs que podem ser deletados (não vendidos)
+            $deletableIds = $this->stockCodeModel
+                ->whereIn('id', $ids)
+                ->where('is_sold', false) // SÓ DELETA SE NÃO FOI VENDIDO
+                ->findColumn('id');
+
+            if (empty($deletableIds)) {
+                return redirect()->route('admin.stock')->with('error', 'Nenhum código disponível foi selecionado. (Códigos vendidos não podem ser excluídos).');
+            }
+
+            // Deleta apenas os IDs seguros
+            $this->stockCodeModel->whereIn('id', $deletableIds)->delete();
+            
+            $count = count($deletableIds);
+            $skippedCount = count($ids) - $count;
+            $message = $count . ' código(s) disponível(is) excluído(s) com sucesso!';
+            
+            // Se algum ID foi enviado mas não estava entre os "deletáveis" (ex: já vendido), avisa o usuário.
+            if ($skippedCount > 0) {
+                session()->setFlashdata('error', $skippedCount . ' código(s) (provavelmente já vendidos) foram ignorados e não podem ser excluídos.');
+            }
+
+            return redirect()->route('admin.stock')->with('success', $message);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Erro ao excluir códigos de estoque em massa: ' . $e->getMessage());
+            return redirect()->route('admin.stock')->with('error', 'Ocorreu um erro ao tentar excluir os códigos.');
         }
     }
 }

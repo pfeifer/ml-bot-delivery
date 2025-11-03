@@ -1,6 +1,6 @@
 <?= $this->extend('admin/template') ?>
 
-<?= $this->section('title') ?>Gerenciar Estoque<?= $this->endSection() ?>
+<?= $this->section('title') ?>Adicionar ao Estoque<?= $this->endSection() ?>
 
 <?= $this->section('page_title') ?>Adicionar ao Estoque<?= $this->endSection() ?>
 
@@ -55,18 +55,15 @@
                 <div class="invalid-feedback"><?= validation_errors()['expires_at'] ?></div>
             <?php endif; ?>
         </div>
+        
         <button type="submit" class="btn btn-primary"
             style="background-color: #DC4814; border-color: #DC4814;">Adicionar ao Estoque</button>
+        
+        <a href="<?= route_to('admin.stock') ?>" class="btn btn-secondary">Voltar para Lista</a>
 
         <?= form_close() ?>
     </div>
 </div>
-
-<hr class="my-4">
-
-<h5 class="mt-4">Estoque Atual (Exemplo)</h5>
-<p>...</p>
-
 
 <?= $this->endSection() ?>
 
