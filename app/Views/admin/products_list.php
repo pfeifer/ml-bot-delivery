@@ -59,8 +59,8 @@
                             <td><?= esc($product->ml_item_id) ?></td>
                             <td><?= esc($product->title) ?></td>
                             <td>
-                                <span class="badge <?= ($product->product_type === 'unique_code') ? 'bg-primary' : 'bg-info' ?>">
-                                    <?= esc($product->product_type === 'unique_code' ? 'Código Único' : 'Link Estático') ?>
+                                <span class="badge <?= ($product->product_type === 'code') ? 'bg-primary' : 'bg-info' ?>">
+                                    <?= esc($product->product_type === 'code' ? 'Código Único' : 'Link Estático') ?>
                                 </span>
                             </td>
                             <td>

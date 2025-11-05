@@ -235,7 +235,7 @@ class WebhookController extends BaseController
                 $productId = $product->id;
                 $deliveryContent = null;
                 $stockCodeId = null;
-                if ($product->product_type === 'unique_code') {
+                if ($product->product_type === 'code') {
                     $stockCodeModel = new StockCodeModel();
                     $this->db = \Config\Database::connect();
                     $this->db->transStart();
@@ -270,7 +270,7 @@ class WebhookController extends BaseController
                         log_message('critical', "ALERTA DE ESTOQUE - Pedido {$orderId}: Estoque esgotado/expirado para produto ID {$productId} (ML: {$mlItemId}).");
                         throw new \Exception("Estoque esgotado para produto ID {$productId} (pedido {$orderId}).");
                     }
-                } elseif ($product->product_type === 'static_link') {
+                } elseif ($product->product_type === 'link') {
                     if (empty($product->delivery_data)) {
                         log_message('error', "Pedido {$orderId}: Link estático não configurado para produto {$productId}.");
                         throw new \Exception("Link estático não configurado (pedido {$orderId})");

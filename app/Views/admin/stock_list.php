@@ -148,7 +148,7 @@
             const selectedOption = productSelect.options[productSelect.selectedIndex];
             const productType = selectedOption ? selectedOption.getAttribute('data-type') : null;
 
-            if (productType === 'unique_code') {
+            if (productType === 'code') {
                 expiresAtField.style.display = 'block'; // Mostra o campo
             } else {
                 expiresAtField.style.display = 'none'; // Esconde o campo

@@ -91,14 +91,14 @@ class StockController extends BaseController
 
 
         try {
-            if ($inputType === 'static_link') {
+            if ($inputType === 'link') {
                 $encryptedLink = $this->encrypter->encrypt($inputData);
                 if ($this->productModel->update($productId, ['delivery_data' => $encryptedLink])) {
                     $insertedCount = 1;
                 } else {
                     throw new \Exception('Falha ao atualizar o link estático.');
                 }
-            } elseif ($inputType === 'unique_code') {
+            } elseif ($inputType === 'code') {
                 $codes = explode("\n", str_replace("\r", "", $inputData));
                 $batchData = [];
 

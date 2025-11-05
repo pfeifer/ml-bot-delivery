@@ -53,7 +53,7 @@ class ProductsController extends BaseController
         $rules = [
             'ml_item_id'       => 'required|is_unique[products.ml_item_id]|max_length[30]',
             'title'            => 'permit_empty|max_length[255]',
-            'product_type'     => 'required|in_list[unique_code,static_link]',
+            'product_type'     => 'required|in_list[code,link]',
             'message_template_id' => 'permit_empty|is_natural_no_zero', 
         ];
         
@@ -162,7 +162,7 @@ class ProductsController extends BaseController
          $rules = [
             'ml_item_id'       => "required|is_unique[products.ml_item_id,id,{$id}]|max_length[30]",
             'title'            => 'permit_empty|max_length[255]',
-            'product_type'     => 'required|in_list[unique_code,static_link]',
+            'product_type'     => 'required|in_list[code,link]',
             'message_template_id' => 'permit_empty|is_natural_no_zero',
         ];
         

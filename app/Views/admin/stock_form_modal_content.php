@@ -28,7 +28,7 @@ $validationErrors = $validationErrors ?? session()->getFlashdata('errors');
                 <option value="<?= esc($product->id) ?>" data-type="<?= esc($product->product_type) ?>"
                     <?= old('product_id') == $product->id ? 'selected' : '' ?>>
                     #<?= esc($product->id) ?> - <?= esc($product->title ?: $product->ml_item_id) ?>
-                    (<?= esc($product->product_type === 'unique_code' ? 'Código Único' : 'Link Estático') ?>)
+                    (<?= esc($product->product_type === 'code' ? 'Código Único' : 'Link Estático') ?>)
                 </option>
             <?php endforeach; ?>
         <?php endif; ?>

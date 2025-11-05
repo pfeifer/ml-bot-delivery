@@ -22,7 +22,7 @@
                         <option value="<?= esc($product->id) ?>" data-type="<?= esc($product->product_type) ?>"
                             <?= old('product_id') == $product->id ? 'selected' : '' ?>>
                             #<?= esc($product->id) ?> - <?= esc($product->title ?: $product->ml_item_id) ?>
-                            (<?= esc($product->product_type === 'unique_code' ? 'Código Único' : 'Link Estático') ?>)
+                            (<?= esc($product->product_type === 'code' ? 'Código Único' : 'Link Estático') ?>)
                         </option>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -78,7 +78,7 @@
             const selectedOption = productSelect.options[productSelect.selectedIndex];
             const productType = selectedOption ? selectedOption.getAttribute('data-type') : null;
 
-            if (productType === 'unique_code') {
+            if (productType === 'code') {
                 expiresAtField.style.display = 'block'; // Mostra o campo
             } else {
                 expiresAtField.style.display = 'none'; // Esconde o campo

@@ -13,7 +13,7 @@ class DefaultMessageTemplateSeeder extends Seeder
         
         $defaultId = 1;
         $defaultName = 'Template Padrão';
-        $defaultContent = "Olá! Agradecemos por sua compra.\n\nSegue seu {delivery_content}\n\nQualquer dúvida, estamos à disposição.";
+        $defaultContent = "Olá! Agradecemos por sua compra.\n\nSegue seu produto:\n\n{delivery_content}\n\nQualquer dúvida, estamos à disposição.";
 
         // Verifica se o ID=1 já existe
         if ($model->find($defaultId) === null) {

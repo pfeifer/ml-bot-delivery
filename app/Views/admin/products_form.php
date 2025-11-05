@@ -42,10 +42,10 @@ $selectedTemplateId = old('message_template_id', $product->message_template_id ?
     <select class="form-select <?= (isset($validationErrors['product_type'])) ? 'is-invalid' : '' ?>"
         id="product_type" name="product_type" required>
         <option value="">Selecione o tipo...</option>
-        <option value="unique_code" <?= old('product_type', $product->product_type ?? '') === 'unique_code' ? 'selected' : '' ?>>
+        <option value="code" <?= old('product_type', $product->product_type ?? '') === 'code' ? 'selected' : '' ?>>
             Código Único (Gift Card, Voucher, Chave)
         </option>
-        <option value="static_link" <?= old('product_type', $product->product_type ?? '') === 'static_link' ? 'selected' : '' ?>>
+        <option value="link" <?= old('product_type', $product->product_type ?? '') === 'link' ? 'selected' : '' ?>>
             Link Estático (Ebook, Curso, Download)
         </option>
     </select>

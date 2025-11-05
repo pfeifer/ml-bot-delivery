@@ -12,18 +12,14 @@ class CreateProductsTable extends Migration
             'id' => [ 'type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true ],
             'ml_item_id' => [ 'type' => 'VARCHAR', 'constraint' => '30', 'unique' => true ], // ID do anúncio/item no ML
             'title' => [ 'type' => 'VARCHAR', 'constraint' => '255', 'null' => true ], // Título do anúncio ML (referência)
-            'product_type' => [ 'type' => 'ENUM', 'constraint' => ['unique_code', 'static_link'], 'null' => false ], // Tipo: 'unique_code' ou 'static_link'
+            'product_type' => [ 'type' => 'ENUM', 'constraint' => ['code', 'link'], 'null' => false ], // Tipo: 'code' ou 'link'
             'delivery_data' => [ 'type' => 'TEXT', 'null' => true ], // Link estático (criptografado)
-            
-            // --- CAMPO ADICIONADO DIRETAMENTE AQUI ---
             'message_template_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
                 'null'       => true, // Permite ser nulo
             ],
-            // ----------------------------------------
-
             'created_at' => [ 'type' => 'DATETIME', 'null' => true ],
             'updated_at' => [ 'type' => 'DATETIME', 'null' => true ],
         ]);
