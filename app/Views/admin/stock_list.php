@@ -10,10 +10,15 @@
     <?= csrf_field() ?>
     
     <div class="mb-3">
-        <a href="<?= route_to('admin.stock.new') ?>" class="btn btn-success">
+        <a href="<?= route_to('admin.stock.new') ?>" 
+           class="btn btn-success"
+           data-bs-toggle="ajax-modal"
+           data-title="Adicionar ao Estoque"
+           data-modal-size="modal-lg">
             <i class="fa-solid fa-plus fa-fw"></i>
             Adicionar ao Estoque
         </a>
+        
         <button type="submit" class="btn btn-outline-danger" id="deleteSelectedStockBtn" 
                 onclick="return confirm('Tem certeza que deseja excluir os códigos selecionados?\n\nAPENAS códigos disponíveis (não vendidos) serão excluídos.');">
             <i class="fa-solid fa-trash fa-fw"></i>
@@ -54,7 +59,10 @@
                             <td><?= esc($code->id) ?></td>
                             <td>
                                 <a href="<?= route_to('admin.products.edit', $code->product_id) ?>" 
-                                   title="Editar Produto: <?= esc($code->title) ?>">
+                                   title="Editar Produto: <?= esc($code->title) ?>"
+                                   data-bs-toggle="ajax-modal"
+                                   data-title="Editar Produto: <?= esc($code->title) ?>"
+                                   data-modal-size="modal-lg">
                                     <?= esc($code->title ?: $code->ml_item_id) ?>
                                 </a>
                             </td>
@@ -117,8 +125,40 @@
                 e.preventDefault(); // Impede o envio do formulário
                 return false;
             }
-            // A confirmação 'onclick' já está no botão
         });
     });
+
+    /**
+     * ADICIONADO: Função global que o template.js procura
+     * para inicializar scripts dentro de um modal recém-carregado.
+     */
+    window.initModalScripts = function($modalBody) {
+        
+        // Encontra os elementos *dentro* do corpo do modal
+        const productSelect = $modalBody.find('#product_id_modal').get(0);
+        const expiresAtField = $modalBody.find('#expires_at_field_modal').get(0);
+        const expiresAtInput = $modalBody.find('#expires_at_modal').get(0);
+
+        // Se não encontrar os elementos (ex: abriu o modal de "Editar Produto"), não faz nada
+        if (!productSelect || !expiresAtField || !expiresAtInput) {
+            return;
+        }
+
+        function checkProductType() {
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const productType = selectedOption ? selectedOption.getAttribute('data-type') : null;
+
+            if (productType === 'unique_code') {
+                expiresAtField.style.display = 'block'; // Mostra o campo
+            } else {
+                expiresAtField.style.display = 'none'; // Esconde o campo
+                expiresAtInput.value = ''; // Limpa o valor se não for código único
+            }
+        }
+        // Verifica no carregamento do modal
+        checkProductType();
+        // Adiciona listener para mudanças no select
+        productSelect.addEventListener('change', checkProductType);
+    }
 </script>
 <?= $this->endSection() ?>

@@ -4,7 +4,7 @@ namespace App\Controllers;
 use App\Models\ProductModel;
 use App\Models\StockCodeModel;
 use App\Models\MlCredentialsModel;
-use App\Models\MessageTemplateModel; // << Import
+use App\Models\MessageTemplateModel;
 use CodeIgniter\API\ResponseTrait;
 use Config\Services;
 use App\Libraries\MercadoLivreAuth;
@@ -16,16 +16,13 @@ class WebhookController extends BaseController
     private ?int $sellerId = null;
     private ?string $accessToken = null;
     private ?object $credentials = null;
-    private $templateModel; // << Propriedade
+    private $templateModel;
 
-    public function __construct() // << Construtor
+    public function __construct()
     {
         $this->templateModel = new MessageTemplateModel();
     }
-
-
     // ... (getDbCredentials, getAccessToken, getSellerId, fetchAndSaveSellerId permanecem EXATAMENTE IGUAIS) ...
-
     /**
      * Obtém as credenciais do banco de dados (uma única vez por requisição).
      */
@@ -47,7 +44,6 @@ class WebhookController extends BaseController
         }
         return $this->credentials;
     }
-
     /**
      * Obtém o Access Token, priorizando o DB e implementando refresh se necessário.
      */
@@ -96,8 +92,6 @@ class WebhookController extends BaseController
         }
         return $this->accessToken;
     }
-
-
     /**
      * Obtém o Seller ID.
      */
@@ -123,7 +117,6 @@ class WebhookController extends BaseController
             }
         }
     }
-
     /**
      * Auxiliar para buscar Seller ID da API e salvar no DB.
      */
@@ -166,10 +159,7 @@ class WebhookController extends BaseController
             return null;
         }
     }
-
     // --- FIM DOS MÉTODOS DE AUTENTICAÇÃO ---
-
-
     public function handle()
     {
         $json = $this->request->getJSON();
@@ -296,10 +286,8 @@ class WebhookController extends BaseController
                     log_message('error', "Pedido {$orderId}: Tipo de produto desconhecido '{$product->product_type}' (ID {$productId}).");
                     throw new \Exception("Tipo de produto desconhecido (pedido {$orderId})");
                 }
-
                 // g. Enviar mensagem via API do ML
                 if ($deliveryContent && $buyerId) {
-
                     // --- INÍCIO: Lógica de Busca do Template ---
                     $templateContent = null;
                     $templateToUse = null;
@@ -325,7 +313,6 @@ class WebhookController extends BaseController
                     }
                     $messageText = str_replace('{delivery_content}', $deliveryContent, $templateContent);
                     // --- FIM: Lógica de Busca do Template ---
-
                     $messagePayload = json_encode([
                         'from' => ['user_id' => $currentSellerId],
                         'to' => ['user_id' => $buyerId],
@@ -364,7 +351,6 @@ class WebhookController extends BaseController
                             log_message('warning', "Pedido {$orderId}: Não foi possível obter o shipment_id (Status {$shipmentResponse->getStatusCode()}). O pedido pode não ser ME1. Pulando etapa 'entregue'. Body: " . $shipmentResponse->getBody());
                         } else {
                             $shipmentData = json_decode($shipmentResponse->getBody());
-
                             // 2. Validar se é ME1 e se o ID existe
                             $shipmentId = $shipmentData->id ?? null;
                             $shippingMode = $shipmentData->mode ?? '';
@@ -372,7 +358,6 @@ class WebhookController extends BaseController
 
                             if ($shipmentId && $shippingMode === 'me1' && $currentStatus !== 'delivered') {
                                 log_message('info', "Pedido {$orderId}: Shipment ID {$shipmentId} (ME1) encontrado. Enviando status 'delivered'.");
-
                                 // 3. Montar o payload
                                 $deliveryPayload = json_encode([
                                     'payload' => [
@@ -382,7 +367,6 @@ class WebhookController extends BaseController
                                     'status' => 'delivered',
                                     'substatus' => null
                                 ]);
-
                                 // 4. Enviar a notificação de status
                                 $deliveryResponse = $httpClient->post("shipments/{$shipmentId}/seller_notifications", [
                                     'headers' => [
@@ -398,7 +382,6 @@ class WebhookController extends BaseController
                                 } else {
                                     log_message('info', "Pedido {$orderId}: Pedido marcado como 'entregue' com sucesso.");
                                 }
-
                             } elseif ($shippingMode !== 'me1') {
                                 log_message('info', "Pedido {$orderId}: Pedido não é 'me1' (Modo: {$shippingMode}). Não é necessário marcar como 'entregue'.");
                             } elseif ($currentStatus === 'delivered') {
@@ -412,24 +395,18 @@ class WebhookController extends BaseController
                         log_message('error', "Pedido {$orderId}: Exceção ao tentar marcar como 'entregue': " . $e->getMessage());
                     }
                     // --- FIM: Marcar pedido como entregue ---
-
-
                 } elseif (!$deliveryContent) {
                     log_message('error', "Pedido {$orderId}: Sem conteúdo de entrega ao final.");
                 } elseif (!$buyerId) {
                     log_message('warning', "Pedido {$orderId}: Conteúdo gerado, mas sem ID do comprador. Mensagem não enviada.");
                 }
-
                 log_message('info', "Pedido {$orderId}: Processamento do webhook concluído.");
-
             } catch (\Throwable $e) {
                 log_message('error', "[Webhook Error] Pedido ML ID: " . ($orderId ?? 'N/A') . " | Erro: " . $e->getMessage() . " | Arquivo: " . $e->getFile() . " | Linha: " . $e->getLine());
             }
-
         } else {
             log_message('notice', 'Webhook ML recebido com tópico irrelevante ou ausente: ' . ($json->topic ?? 'N/A') . '. Ignorando.');
         }
-
         return $this->response->setStatusCode(200);
     }
 }

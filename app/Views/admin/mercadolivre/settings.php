@@ -38,14 +38,24 @@
                 <?= csrf_field() ?>
 
                 <div class="mb-3">
-                    <a href="<?= route_to('admin.message_templates.new') ?>" class="btn btn-success">
+                    <a href="<?= route_to('admin.message_templates.new') ?>" 
+                       class="btn btn-success"
+                       data-bs-toggle="ajax-modal"
+                       data-title="Adicionar Novo Template"
+                       data-modal-size="modal-lg">
                         <i class="fa-solid fa-plus fa-fw"></i>
                         Adicionar Novo Template
                     </a>
-                    <button type="button" class="btn btn-outline-primary" id="editSelectedTemplateBtn">
+                    
+                    <button type="button" class="btn btn-outline-primary" 
+                            id="editSelectedTemplateBtnModal"
+                            data-bs-toggle="ajax-modal"
+                            data-title="Editar Template"
+                            data-modal-size="modal-lg">
                         <i class="fa-solid fa-pencil fa-fw"></i>
                         Editar Selecionado
                     </button>
+                    
                     <button type="submit" class="btn btn-outline-danger" id="deleteSelectedTemplateBtn" 
                             onclick="return confirm('Tem certeza que deseja excluir os templates selecionados?\n\nO Template Padrão (ID 1) não pode ser excluído.');">
                         <i class="fa-solid fa-trash fa-fw"></i>
@@ -64,6 +74,7 @@
                                     <th>ID</th>
                                     <th>Nome Identificador</th>
                                     <th>Conteúdo (Início)</th>
+                                    <th style="width: 50px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -83,6 +94,16 @@
                                             <?php endif; ?>
                                         </td>
                                         <td><?= esc(substr($template->content, 0, 100)) . (strlen($template->content) > 100 ? '...' : '') ?></td>
+                                        <td>
+                                            <a href="<?= route_to('admin.message_templates.edit', $template->id) ?>"
+                                               class="btn btn-sm btn-outline-primary"
+                                               data-bs-toggle="ajax-modal"
+                                               data-title="Editar Template #<?= esc($template->id) ?>"
+                                               data-modal-size="modal-lg"
+                                               title="Editar">
+                                                <i class="fa-solid fa-pencil fa-fw"></i>
+                                            </a>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -97,7 +118,6 @@
             
             </form> </div>
     </div>
-
     <div class="tab-pane fade" id="tab-credentials" role="tabpanel" aria-labelledby="credentials-tab" tabindex="0">
         <div class="p-3 border border-top-0 rounded-bottom">
             <h4>Gerenciamento de Credenciais</h4>
@@ -111,7 +131,6 @@
             <p>Em breve: Outras configurações relacionadas à API do Mercado Livre.</p>
         </div>
     </div>
-
 </div>
 
 <?= $this->endSection() ?>
@@ -123,7 +142,7 @@
         const templatesTable = new DataTable('#templatesTable', {
             "columnDefs": [
                 {
-                    "targets": 0, // Coluna do checkbox
+                    "targets": [0, 4], // Coluna do checkbox e Ações
                     "orderable": false,
                     "searchable": false
                 }
@@ -148,22 +167,24 @@
             }
         });
 
-        // 4. Lógica "Editar Selecionado" para Templates
-        $('#editSelectedTemplateBtn').on('click', function() {
+        // 4. Lógica "Editar Selecionado" para Templates (para o modal)
+        $('#editSelectedTemplateBtnModal').on('mousedown', function(e) {
             const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
             
             if (selected.length === 0) {
                 alert('Por favor, selecione um template para editar.');
+                e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return;
             }
             if (selected.length > 1) {
                 alert('Você só pode editar um template por vez.');
+                e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return;
             }
             
             const templateId = selected.val();
             const editUrl = '<?= rtrim(route_to('admin.message_templates.edit', 1), '1') ?>' + templateId;
-            window.location.href = editUrl;
+            $(this).attr('data-url', editUrl); // Define o URL para o script global pegar
         });
 
         // 5. Lógica "Excluir Selecionados" para Templates
@@ -174,7 +195,6 @@
                 e.preventDefault();
                 return false;
             }
-            // A confirmação já está no botão
         });
     });
 </script>

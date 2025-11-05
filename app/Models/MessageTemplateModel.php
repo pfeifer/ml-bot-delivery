@@ -23,8 +23,10 @@ class MessageTemplateModel extends Model
     // Validation
     protected $validationRules = [
         'name' => 'required|max_length[100]',
-        'content' => 'required',
+        // MODIFICADO: Adicionada validação de regex
+        'content' => 'required|regex_match[/\{delivery_content\}/]',
     ];
+
     protected $validationMessages = [
         'name' => [
             'required' => 'O nome do template é obrigatório.',
@@ -32,6 +34,8 @@ class MessageTemplateModel extends Model
         ],
         'content' => [
             'required' => 'O conteúdo da mensagem é obrigatório.',
+            // ADICIONADO: Mensagem de erro para a nova regra
+            'regex_match' => 'O conteúdo da mensagem DEVE conter o marcador {delivery_content}.',
         ],
     ];
     protected $skipValidation = false;

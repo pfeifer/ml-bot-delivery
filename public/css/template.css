@@ -48,7 +48,17 @@ body {
     /* Garante que o link ocupe o espaço */
     height: 100%;
     /* Garante que o link ocupe a altura */
-    transition: justify-content var(--transition-speed) ease;
+
+    /* ADICIONADO: Alinha o padding horizontal com os .nav-link */
+    padding-left: var(--bs-nav-link-padding-x);
+    padding-right: var(--bs-nav-link-padding-x);
+
+    /* ADICIONADO: Adiciona gap entre o ícone e o texto */
+    gap: 0.5rem;
+    /* 8px */
+
+    /* ADICIONADO: padding e gap à transição */
+    transition: justify-content var(--transition-speed) ease, padding var(--transition-speed) ease, gap var(--transition-speed) ease;
 }
 
 .sidebar .sidebar-header a i {
@@ -76,6 +86,8 @@ body {
 
 .sidebar.collapsed .sidebar-header a {
     padding: 0;
+    /* ADICIONADO: Resetar o gap no modo colapsado */
+    gap: 0;
     margin: 0;
     height: 100%;
     width: 100%;
@@ -102,12 +114,17 @@ body {
     display: none;
 }
 
-/* --- MUDANÇA CRÍTICA AQUI --- */
-/* Esta regra agora se aplica a TUDO que precisa ser centralizado */
+
+/* --- CORREÇÃO DE ESTILO: Unificado --- */
+
+/* * NOVA REGRA COMBINADA
+ * Aplica a forma de "pílula" (50px) a todos os links de navegação
+ * E aos itens do rodapé (logout, switch, user) no modo recolhido.
+*/
 .sidebar.collapsed .nav-pills .nav-link,
 .sidebar.collapsed .logout-link,
 .sidebar.collapsed .theme-switcher-container,
-.sidebar.collapsed .dropdown { /* <-- Alvo no .dropdown, não no .dropdown-toggle */
+.sidebar.collapsed .dropdown {
     justify-content: center;
     align-items: center;
     padding-top: 0.75rem;
@@ -116,19 +133,29 @@ body {
     padding-right: 0;
     min-height: 50px;
     height: auto;
-    width: 100%;
-    /* O dropdown é um d-flex, mas os outros não. */
-    /* Adicionamos d-flex para garantir que 'justify-content' funcione */
-    display: flex; 
+    display: flex;
+    gap: 0;
+
+    /* A forma de pílula (50px) aplicada a todos */
+    width: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0.375rem;
+    /* 6px */
+
+    /* Garante que o texto não quebre (embora esteja invisível) */
+    white-space: nowrap;
 }
 
 /* O .dropdown-toggle (o link <a>) dentro do .dropdown tbm precisa se justificar */
 .sidebar.collapsed .dropdown .dropdown-toggle {
-     width: 100%;
-     justify-content: center; /* Centraliza o <i> */
-     /* 'd-flex' e 'align-items-center' já vêm do HTML */
+    width: 100%;
+    justify-content: center;
+    /* Centraliza o <i> */
+    /* 'd-flex' e 'align-items-center' já vêm do HTML */
 }
-/* --- FIM DA MUDANÇA --- */
+
+/* --- FIM DA CORREÇÃO --- */
 
 
 /* Faz com que a lista de navegação ocupe toda a largura */
@@ -179,9 +206,18 @@ body {
 .sidebar .dropdown-toggle i.fa-fw,
 .sidebar .logout-link i.fa-fw,
 .sidebar .sidebar-header i.fa-fw {
-    margin-right: 8px;
+    /* margin-right: 8px; */
+    /* REMOVIDO: Agora usaremos 'gap' no container */
     vertical-align: middle;
     transition: margin var(--transition-speed) ease;
+}
+
+/* ADICIONADO: 'gap' entre ícone e texto para os links de navegação */
+.sidebar .nav-link,
+.sidebar .dropdown-toggle,
+.sidebar .logout-link {
+    gap: 0.5rem;
+    /* 8px */
 }
 
 /* Alinhamento do ícone do tema */
@@ -266,6 +302,8 @@ body.sidebar-collapsed .main-content {
     border: 1px solid var(--bs-border-color-translucent);
     cursor: pointer;
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    /* ADICIONADO: gap para o switch de tema */
+    gap: 0.5rem;
 }
 
 .theme-switcher-container:hover {
@@ -277,6 +315,12 @@ body.sidebar-collapsed .main-content {
     font-size: 1.2em;
     margin-left: auto;
 }
+
+/* Reseta a margem do switch quando colapsado para permitir a centralização */
+.sidebar.collapsed .theme-switcher-container .form-check-input {
+    margin-left: 0;
+}
+
 
 .theme-switcher-label {
     pointer-events: none;

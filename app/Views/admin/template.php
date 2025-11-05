@@ -156,6 +156,153 @@
     <div id="ajax-scripts">
         <?= $this->renderSection('scripts') ?>
     </div>
-</body>
+
+    <div class="modal fade" id="ajaxModal" tabindex="-1" aria-labelledby="ajaxModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ajaxModalLabel">Carregando...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verifica se o jQuery está carregado
+        if (typeof jQuery === 'undefined') {
+            console.error('jQuery não está carregado. Os modais AJAX foram desabilitados.');
+            return;
+        }
+
+        (function($) { // Wrapper do jQuery
+            
+            // Instância reutilizável do Modal Bootstrap
+            var ajaxModalElement = document.getElementById('ajaxModal');
+            if (!ajaxModalElement) return; // Sai se o modal não existir
+            
+            var ajaxModal = new bootstrap.Modal(ajaxModalElement);
+            var $modalBody = $('#ajaxModal .modal-body');
+            var $modalTitle = $('#ajaxModal .modal-title');
+            var $modalDialog = $('#ajaxModal .modal-dialog'); // Para controlar o tamanho
+
+            // 1. Lógica para ABRIR o modal
+            // Escuta cliques em qualquer link ou botão com o atributo data-bs-toggle="ajax-modal"
+            $(document).on('click', '[data-bs-toggle="ajax-modal"]', function(e) {
+                e.preventDefault();
+                
+                var $trigger = $(this);
+                var url = $trigger.attr('href') || $trigger.data('url');
+                var title = $trigger.data('title') || 'Formulário';
+                var modalSize = $trigger.data('modal-size') || 'modal-lg'; // Padrão 'modal-lg'
+
+                if (!url) {
+                    console.error('Nenhum URL fornecido para o modal AJAX.');
+                    return;
+                }
+
+                // Ajusta o tamanho do modal
+                $modalDialog.removeClass('modal-sm modal-lg modal-xl').addClass(modalSize);
+
+                // Limpa o modal e mostra o spinner
+                $modalTitle.text(title);
+                $modalBody.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                ajaxModal.show();
+
+                // Faz a requisição AJAX para buscar o conteúdo do formulário
+                $.get(url, function(responseHtml) {
+                    // O backend deve retornar SÓ o HTML do formulário
+                    $modalBody.html(responseHtml);
+
+                    // Re-inicializa scripts específicos do modal, se houver
+                    // (Ex: o script de data de validade no formulário de estoque)
+                    if (typeof window.initModalScripts === 'function') {
+                        window.initModalScripts($modalBody);
+                    }
+
+                }).fail(function(jqXHR) {
+                     if (jqXHR.status === 404) {
+                         $modalBody.html('<div class="alert alert-danger">Erro 404: Recurso não encontrado.</div>');
+                     } else {
+                         $modalBody.html('<div class="alert alert-danger">Erro ao carregar o conteúdo. Tente novamente.</div>');
+                     }
+                });
+            });
+
+            // 2. Lógica para SUBMETER o formulário dentro do modal
+            $modalBody.on('submit', 'form', function(e) {
+                e.preventDefault(); // Impede o submit tradicional
+
+                var $form = $(this);
+                var url = $form.attr('action');
+                var method = $form.attr('method') || 'POST';
+                var $submitButton = $form.find('button[type="submit"]');
+                var originalButtonHtml = $submitButton.html();
+
+                // Desabilita o botão e mostra spinner
+                $submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...');
+
+                $.ajax({
+                    url: url,
+                    method: method,
+                    data: $form.serialize(), // Envia os dados do formulário
+                    dataType: 'json', // Espera uma resposta JSON do controlador
+                    success: function(response) {
+                        if (response.success) {
+                            // Sucesso!
+                            ajaxModal.hide();
+                            
+                            // Força o reload da página inteira para atualizar a tabela.
+                            // É mais simples que implementar o reload AJAX da tabela (server-side).
+                            // Adicionamos um flash message de sucesso via JS
+                            if (response.message) {
+                                // Para isso funcionar, o controller não deve mais redirecionar
+                                // A lógica de reload já mostra a mensagem flash (se o controller definir)
+                            }
+                            location.reload();
+
+                        } else if (response.form_html) {
+                            // Erro de validação
+                            // Recarrega o corpo do modal com o novo HTML (que contém os erros)
+                            $modalBody.html(response.form_html);
+                            // Re-habilita o botão
+                            $submitButton.prop('disabled', false).html(originalButtonHtml);
+
+                            // Re-inicializa scripts específicos do modal
+                            if (typeof window.initModalScripts === 'function') {
+                                window.initModalScripts($modalBody);
+                            }
+
+                        } else {
+                             alert(response.message || 'Ocorreu um erro desconhecido.');
+                             $submitButton.prop('disabled', false).html(originalButtonHtml);
+                        }
+                    },
+                    error: function(jqXHR) {
+                        // Erro grave (500, 404, etc.)
+                        console.error('Erro no AJAX submit:', jqXHR.responseText);
+                        alert('Ocorreu um erro grave no servidor. Tente novamente.');
+                        $submitButton.prop('disabled', false).html(originalButtonHtml);
+                    }
+                });
+            });
+
+            // Limpa o modal quando ele é fechado
+            ajaxModalElement.addEventListener('hidden.bs.modal', function () {
+                $modalTitle.text('Carregando...');
+                $modalBody.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+            });
+
+
+        })(jQuery);
+    });
+    </script>
+    </body>
 
 </html>

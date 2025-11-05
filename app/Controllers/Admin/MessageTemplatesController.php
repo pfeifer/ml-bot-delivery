@@ -16,12 +16,10 @@ class MessageTemplatesController extends BaseController
     }
 
     /**
-     * Lista todos os templates (agora redireciona para a página de settings)
+     * Lista todos os templates (redireciona)
      */
     public function index()
     {
-        // A rota principal (/) agora aponta para MercadoLivreController::index
-        // Este método não é mais chamado por essa rota, mas redirecionamos por segurança
         return redirect()->route('admin.mercadolivre.settings');
     }
 
@@ -30,7 +28,14 @@ class MessageTemplatesController extends BaseController
      */
     public function new()
     {
-        return view('admin/message_templates/form', ['action' => 'create', 'template' => null]);
+        $data = ['action' => 'create', 'template' => null];
+
+        // MODIFICADO: Se for AJAX (modal), retorna a view parcial
+        if ($this->request->isAJAX()) {
+            return view('admin/message_templates/form_modal_content', $data);
+        }
+        
+        return view('admin/message_templates/form', $data); // Fallback
     }
 
     /**
@@ -44,9 +49,28 @@ class MessageTemplatesController extends BaseController
         ];
 
         if ($this->templateModel->save($dataToSave)) {
-            // Redireciona de volta para a lista (na página de settings)
+            // MODIFICADO: Resposta AJAX em caso de sucesso
+            if ($this->request->isAJAX()) {
+                 session()->setFlashdata('success', 'Template de mensagem criado com sucesso!');
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Template de mensagem criado com sucesso!'
+                ]);
+            }
             return redirect()->route('admin.mercadolivre.settings')->with('success', 'Template de mensagem criado com sucesso!');
         } else {
+             // MODIFICADO: Resposta AJAX em caso de falha de validação
+             if ($this->request->isAJAX()) {
+                 $data['action'] = 'create';
+                 $data['template'] = null;
+                 $data['validationErrors'] = $this->templateModel->errors(); // Passa os erros
+
+                 return $this->response->setJSON([
+                     'success' => false,
+                     'message' => 'Erro de validação',
+                     'form_html' => view('admin/message_templates/form_modal_content', $data)
+                 ]);
+             }
             return redirect()->route('admin.message_templates.new')
                              ->withInput()
                              ->with('errors', $this->templateModel->errors());
@@ -60,9 +84,21 @@ class MessageTemplatesController extends BaseController
     {
         $template = $this->templateModel->find($id);
         if (!$template) {
+            // MODIFICADO: Resposta AJAX 404
+             if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setBody('Template não encontrado.');
+             }
             return redirect()->route('admin.mercadolivre.settings')->with('error', 'Template não encontrado.');
         }
-        return view('admin/message_templates/form', ['action' => 'update', 'template' => $template]);
+        
+        $data = ['action' => 'update', 'template' => $template];
+
+        // MODIFICADO: Se for AJAX (modal), retorna a view parcial
+        if ($this->request->isAJAX()) {
+            return view('admin/message_templates/form_modal_content', $data);
+        }
+        
+        return view('admin/message_templates/form', $data); // Fallback
     }
 
     /**
@@ -72,6 +108,10 @@ class MessageTemplatesController extends BaseController
     {
         $template = $this->templateModel->find($id);
         if (!$template) {
+            // MODIFICADO: Resposta AJAX 404
+             if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Template não encontrado.']);
+             }
             return redirect()->route('admin.mercadolivre.settings')->with('error', 'Template não encontrado.');
         }
 
@@ -81,8 +121,28 @@ class MessageTemplatesController extends BaseController
         ];
 
         if ($this->templateModel->update($id, $dataToUpdate)) {
+             // MODIFICADO: Resposta AJAX em caso de sucesso
+             if ($this->request->isAJAX()) {
+                 session()->setFlashdata('success', 'Template de mensagem atualizado com sucesso!');
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Template de mensagem atualizado com sucesso!'
+                ]);
+            }
              return redirect()->route('admin.mercadolivre.settings')->with('success', 'Template de mensagem atualizado com sucesso!');
         } else {
+             // MODIFICADO: Resposta AJAX em caso de falha de validação
+             if ($this->request->isAJAX()) {
+                 $data['action'] = 'update';
+                 $data['template'] = $template; // Passa o template original
+                 $data['validationErrors'] = $this->templateModel->errors(); // Passa os erros
+
+                 return $this->response->setJSON([
+                     'success' => false,
+                     'message' => 'Erro de validação',
+                     'form_html' => view('admin/message_templates/form_modal_content', $data)
+                 ]);
+             }
              return redirect()->route('admin.message_templates.edit', $id)
                               ->withInput()
                               ->with('errors', $this->templateModel->errors());
@@ -90,16 +150,14 @@ class MessageTemplatesController extends BaseController
     }
 
     /**
-     * Exclui um template.
+     * Exclui um template. (Não precisa de modal)
      */
     public function delete($id = null)
     {
-        // *** CORREÇÃO AQUI: Proíbe deletar o ID 1 ***
         if ($id == 1) {
             return redirect()->route('admin.mercadolivre.settings')
                              ->with('error', 'Não é possível excluir o "Template Padrão" (ID 1), pois ele é usado pelo sistema.');
         }
-        // *** FIM DA CORREÇÃO ***
             
         $template = $this->templateModel->find($id);
         if (!$template) {
@@ -114,7 +172,7 @@ class MessageTemplatesController extends BaseController
     }
 
     /**
-     * Exclui um template em massa.
+     * Exclui um template em massa. (Não precisa de modal)
      */
     public function deleteBatch()
     {
@@ -124,7 +182,6 @@ class MessageTemplatesController extends BaseController
             return redirect()->route('admin.mercadolivre.settings')->with('error', 'Nenhum template selecionado para exclusão.');
         }
 
-        // --- PROTEÇÃO CRÍTICA: Impedir exclusão do ID 1 ---
         $filteredIds = [];
         $skippedDefault = false;
         foreach ($ids as $id) {
@@ -134,7 +191,6 @@ class MessageTemplatesController extends BaseController
                 $skippedDefault = true;
             }
         }
-        // ----------------------------------------------------
 
         if (empty($filteredIds)) {
              $message = $skippedDefault ? 'Não é possível excluir o Template Padrão (ID 1).' : 'Nenhum template válido selecionado.';
@@ -148,7 +204,6 @@ class MessageTemplatesController extends BaseController
             $successMessage = $count . ' template(s) excluído(s) com sucesso!';
             
             if ($skippedDefault) {
-                // Se tentou excluir o 1, avisa que ele foi pulado
                 session()->setFlashdata('error', 'O "Template Padrão" (ID 1) não pode ser excluído e foi ignorado.');
             }
             
