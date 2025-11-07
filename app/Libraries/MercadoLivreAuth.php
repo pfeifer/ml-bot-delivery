@@ -4,7 +4,7 @@ namespace App\Libraries;
 
 use Config\Services;
 use Throwable;
-use App\Models\MlCredentialsModel; // Importa o novo Model
+use App\Models\MlCredentialsModel;
 
 class MercadoLivreAuth
 {
@@ -35,7 +35,6 @@ class MercadoLivreAuth
             // Você pode querer notificar o admin aqui para reautenticar manualmente
             return false;
         }
-
         // Cliente HTTP configurado para a API do ML
         $httpClient = Services::curlrequest([
             //'base_uri' => 'https://api.mercadolibre.com',
@@ -62,11 +61,9 @@ class MercadoLivreAuth
             // Realiza a requisição POST
             // 'form_params' envia os dados como application/x-www-form-urlencoded
             $response = $httpClient->post('https://api.mercadolibre.com/oauth/token', ['form_params' => $payload]);
-
             $statusCode = $response->getStatusCode(); // Pega o código de status HTTP da resposta
             $body = $response->getBody(); // Pega o corpo da resposta
             $data = json_decode($body); // Tenta decodificar o corpo como JSON
-
             // Verifica se a requisição foi bem-sucedida (status 200) e se os tokens esperados vieram na resposta
             if ($statusCode === 200 && isset($data->access_token) && isset($data->refresh_token)) {
                 log_message('info', '[ML Auth] Token atualizado com sucesso pela API!');
@@ -92,7 +89,6 @@ class MercadoLivreAuth
                     // Mesmo recebendo da API, se não salvar no DB, considera falha.
                     return false; // Falha
                 }
-
             } else {
                 // Se o status não for 200 ou faltar algum token na resposta
                 log_message('error', "[ML Auth] Falha ao atualizar token via API. Status: {$statusCode}, Resposta: {$body}");
@@ -114,7 +110,6 @@ class MercadoLivreAuth
             return false; // Falha
         }
     }
-
     /**
      * Obtém o Access Token atual do Banco de Dados. (Método auxiliar, pode não ser necessário fora desta classe)
      * @return string|null
