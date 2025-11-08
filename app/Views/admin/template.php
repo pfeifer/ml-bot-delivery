@@ -48,7 +48,13 @@
                     <span>Estoque</span>
                 </a>
             </li>
-            
+            <li class="nav-item">
+                <a href="<?= route_to('admin.orders') ?>"
+                    class="nav-link ajax-link d-flex align-items-center <?= (str_starts_with(uri_string(), 'admin/orders')) ? 'active' : 'link-body-emphasis' ?>">
+                    <i class="fa-solid fa-receipt fa-lg fa-fw"></i>
+                    <span>Pedidos</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a href="<?= route_to('admin.mercadolivre.settings') ?>" 
                    class="nav-link ajax-link d-flex align-items-center 

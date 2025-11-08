@@ -34,6 +34,9 @@ $routes->group('admin', ['filter' => 'auth'], static function ($routes) {
     $routes->post('stock/add', 'Admin\StockController::add', ['as' => 'admin.stock.add']);
     $routes->post('stock/delete-batch', 'Admin\StockController::deleteBatch', ['as' => 'admin.stock.delete.batch']);
 
+    // Pedidos
+    $routes->get('orders', 'Admin\OrdersController::index', ['as' => 'admin.orders']);
+
     // --- ROTA PRINCIPAL DO MERCADO LIVRE (COM TABS) ---
     $routes->get('mercadolivre', 'Admin\MercadoLivreController::index', ['as' => 'admin.mercadolivre.settings']);
 
@@ -60,5 +63,5 @@ $routes->group('admin', ['filter' => 'auth'], static function ($routes) {
 $routes->group('cron-tasks', static function ($routes) {
     $routes->get('migrate/(:any)', 'CronController::runMigrate/$1'); // Rota para Migrations
     $routes->get('seed/(:any)', 'CronController::runSeed/$1'); // Rota para Seeders
-    $routes->get('refresh-token/(:any)', 'CronController::refreshToken/$1'); // Rota para o Refresh Token do ML
+    $routes->get('refresh-token/(:any)', 'CronController::refreshToken/$1', ['as' => 'cron.refresh-token']); // Rota para o Refresh Token do ML
 });
