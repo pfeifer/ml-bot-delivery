@@ -258,13 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 })();
 
-// --- Início da Lógica de Navegação AJAX (sem modificações) ---
+// --- Lógica de Navegação AJAX (Restaurada) ---
 document.addEventListener('DOMContentLoaded', function () {
-    // Esta parte do código depende do jQuery, que é carregado no template.
-    // O listener 'DOMContentLoaded' garante que o DOM está pronto,
-    // mas o jQuery pode ainda não estar. Vamos colocar a lógica AJAX
-    // dentro de um segundo 'DOMContentLoaded' e verificar o jQuery.
-
     // Verifica se o jQuery está carregado
     if (typeof jQuery === 'undefined') {
         console.error('jQuery não está carregado. A navegação AJAX foi desabilitada.');
@@ -280,10 +275,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var $link = $(this);
             var url = $link.attr('href');
 
+            // --- CORREÇÃO: Lógica que impedia o reload foi comentada ---
             // Ignorar se o link já estiver ativo
-            if ($link.hasClass('active') && !url.includes('#')) { // Permite abas (que usam #)
-                return;
-            }
+            // if ($link.hasClass('active') && !url.includes('#')) { // Permite abas (que usam #)
+            //     return;
+            // }
+            // --- FIM DA CORREÇÃO ---
             
             // Selecionar os containers de conteúdo
             var $contentContainer = $('main.content');
@@ -298,49 +295,55 @@ document.addEventListener('DOMContentLoaded', function () {
                 url: url,
                 type: 'GET',
                 dataType: 'html', // Esperamos receber a página HTML completa
+                cache: false, // Adicionado para garantir que os dados sejam novos
                 success: function (responseHtml) {
-                    // Coloca a resposta (HTML completo) em um div temporário
-                    var $newHtml = $('<div>').html(responseHtml);
+                    try {
+                        // Coloca a resposta (HTML completo) em um div temporário
+                        var $newHtml = $('<div>').html(responseHtml);
 
-                    // Encontrar o novo título, conteúdo e scripts da página de resposta
-                    var newTitle = $newHtml.find('h1.mb-4').html();
-                    var newContent = $newHtml.find('main.content').html();
-                    var newScripts = $newHtml.find('#ajax-scripts').html(); // Pega o conteúdo do nosso container
+                        // Encontrar o novo título, conteúdo e scripts da página de resposta
+                        var newTitle = $newHtml.find('h1.mb-4').html();
+                        var newContent = $newHtml.find('main.content').html();
+                        var newScripts = $newHtml.find('#ajax-scripts').html(); // Pega o conteúdo do nosso container
 
-                    if (newContent) {
-                        // 1. Atualizar o título e o conteúdo da página atual
-                        $pageTitle.html(newTitle);
-                        $contentContainer.html(newContent);
+                        if (newContent) {
+                            // 1. Atualizar o título e o conteúdo da página atual
+                            $pageTitle.html(newTitle);
+                            $contentContainer.html(newContent);
 
-                        // 2. Atualizar o estado 'active' na sidebar
-                        $('#adminSidebar .nav-pills a.active').removeClass('active').addClass('link-body-emphasis');
-                        $link.addClass('active').removeClass('link-body-emphasis');
+                            // 2. Atualizar o estado 'active' na sidebar
+                            $('#adminSidebar .nav-pills a.active').removeClass('active').addClass('link-body-emphasis');
+                            $link.addClass('active').removeClass('link-body-emphasis');
 
-                        // 3. Atualizar a URL na barra de endereços (para deep-linking e botão voltar)
-                        history.pushState({ path: url }, '', url);
+                            // 3. Atualizar a URL na barra de endereços (para deep-linking e botão voltar)
+                            history.pushState({ path: url }, '', url);
 
-                        // 4. Atualizar o <title> da aba do navegador
-                        var newPageTitle = $newHtml.find('title').text();
-                        if (newPageTitle) {
-                            document.title = newPageTitle;
+                            // 4. Atualizar o <title> da aba do navegador
+                            var newPageTitle = $newHtml.find('title').text();
+                            if (newPageTitle) {
+                                document.title = newPageTitle;
+                            }
+                            
+                            // 5. Remover scripts AJAX antigos (se existirem)
+                            $('#ajax-scripts-container').remove();
+                            
+                            // 6. Adicionar e executar os novos scripts (MUITO IMPORTANTE para DataTables)
+                            if (newScripts) {
+                                // Criamos um novo container de script e o adicionamos
+                                var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
+                                $('body').append($scriptContainer);
+                            }
+                            
+                            // 7. (Opcional) Rolar para o topo da área de conteúdo
+                            $contentContainer.scrollTop(0);
+
+                        } else {
+                            // Fallback: Se não conseguir "parsear" o conteúdo (ex: erro de login/redirect)
+                            window.location.href = url;
                         }
-                        
-                        // 5. Remover scripts AJAX antigos (se existirem)
-                        $('#ajax-scripts-container').remove();
-                        
-                        // 6. Adicionar e executar os novos scripts (MUITO IMPORTANTE para DataTables)
-                        if (newScripts) {
-                            // Criamos um novo container de script e o adicionamos
-                            var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
-                            $('body').append($scriptContainer);
-                        }
-                        
-                        // 7. (Opcional) Rolar para o topo da área de conteúdo
-                        $contentContainer.scrollTop(0);
-
-                    } else {
-                        // Fallback: Se não conseguir "parsear" o conteúdo (ex: erro de login/redirect)
-                        window.location.href = url;
+                    } catch(e) {
+                         console.error("Erro ao processar resposta AJAX:", e);
+                        window.location.href = url; // Fallback
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {

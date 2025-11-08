@@ -309,24 +309,22 @@
             const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
             
             if (selected.length === 0) {
-                // MODIFICADO: Usa a nova função showAlert
                 showAlert('Por favor, selecione um template para editar.', 'Atenção');
-                e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
+                e.stopImmediatePropagation(); 
                 return;
             }
             if (selected.length > 1) {
-                // MODIFICADO: Usa a nova função showAlert
                 showAlert('Você só pode editar um template por vez.', 'Atenção');
-                e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
+                e.stopImmediatePropagation();
                 return;
             }
             
             const templateId = selected.val();
             const editUrl = '<?= rtrim(route_to('admin.message_templates.edit', 1), '1') ?>' + templateId;
-            $(this).attr('data-url', editUrl); // Define o URL para o script global pegar
+            $(this).attr('data-url', editUrl);
         });
 
-        // 5. Lógica "Excluir Selecionados" para Templates (MODIFICADO)
+        // 5. Lógica "Excluir Selecionados" para Templates (MODIFICADO PARA AJAX)
         $('#batchDeleteTemplatesForm').on('submit', function(e) {
             e.preventDefault(); // Impede o envio imediato
             const form = $(this);
@@ -337,14 +335,56 @@
                 return false;
             }
             
-            // Se a validação passar, mostra o modal de confirmação
             const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> templates selecionados?<br><br><small>O Template Padrão (ID 1) não pode ser excluído e será ignorado.</small>';
+            
             showConfirm(msg, 'Confirmar Exclusão', function() {
-                form.get(0).submit(); // Envia o formulário de verdade
+                // --- INÍCIO DA LÓGICA AJAX ---
+                var $contentContainer = $('main.content');
+                var $pageTitle = $('h1.mb-4');
+                $pageTitle.text('Excluindo...');
+                $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    dataType: 'html', // Espera o HTML da página redirecionada
+                    
+                    success: function(responseHtml) {
+                        try {
+                            var $newHtml = $('<div>').html(responseHtml);
+                            var newTitle = $newHtml.find('h1.mb-4').html();
+                            var newContent = $newHtml.find('main.content').html();
+                            var newScripts = $newHtml.find('#ajax-scripts').html();
+                            var newPageTitle = $newHtml.find('title').text();
+
+                            if (newContent) {
+                                $pageTitle.html(newTitle);
+                                $contentContainer.html(newContent);
+                                if (newPageTitle) document.title = newPageTitle;
+                                
+                                $('#ajax-scripts-container').remove();
+                                if (newScripts) {
+                                    var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
+                                    $('body').append($scriptContainer);
+                                }
+                                $contentContainer.scrollTop(0);
+                            } else {
+                                location.reload(); // Fallback
+                            }
+                        } catch(e) {
+                            location.reload(); // Fallback
+                        }
+                    },
+                    error: function() {
+                        location.reload(); // Fallback em caso de erro
+                    }
+                });
+                // --- FIM DA LÓGICA AJAX ---
             });
         });
 
-        // --- INÍCIO DO SCRIPT ATUALIZADO PARA O BOTÃO REFRESH (COM ALERTA BOOTSTRAP) ---
+        // --- SCRIPT DO BOTÃO REFRESH (sem alterações) ---
         $('#forceRefreshButton').on('click', function(e) {
             e.preventDefault();
             var $button = $(this);
@@ -352,13 +392,9 @@
             var url = $button.data('url');
             var $alertPlaceholder = $('#refresh-alert-placeholder'); // Seleciona o placeholder
 
-            // Limpa alertas antigos
             $alertPlaceholder.html('');
-
-            // Desabilita o botão e mostra "carregando"
             $button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Atualizando...');
 
-            // Função para criar o HTML do Alerta
             function createAlert(message, type) {
                 return `
                     <div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -370,26 +406,20 @@
 
             $.get(url)
                 .done(function(response) {
-                    // Sucesso!
                     var successMsg = '<strong>Sucesso!</strong> Token atualizado. A página será recarregada em 3 segundos...';
                     $alertPlaceholder.html(createAlert(successMsg, 'success'));
                     
-                    // Recarrega a página após 3 segundos para o usuário ler a mensagem
                     setTimeout(function() {
                         location.reload();
-                    }, 3000); // 3000ms = 3 segundos
+                    }, 3000);
                 })
                 .fail(function(jqXHR) {
-                    // Erro!
                     console.error('Erro ao forçar refresh:', jqXHR.responseText);
                     var errorMsg = '<strong>Erro!</strong> Não foi possível atualizar o token. ' + (jqXHR.responseText || 'Verifique os logs.');
                     $alertPlaceholder.html(createAlert(errorMsg, 'danger'));
-
-                    // Restaura o botão em caso de falha para que o usuário possa tentar novamente
                     $button.prop('disabled', false).html(originalHtml);
                 });
         });
-        // --- FIM DO SCRIPT ATUALIZADO ---
 
     });
 </script>

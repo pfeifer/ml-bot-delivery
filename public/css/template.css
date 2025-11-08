@@ -2,10 +2,8 @@
 :root {
     --sidebar-width-expanded: 250px;
     --sidebar-width-collapsed: 80px;
-    /* Ajuste se necessário */
     --transition-speed: 0.3s;
     --sidebar-top-height: 56px;
-    /* Altura da linha superior (correspondente à navbar) */
 }
 
 body {
@@ -37,27 +35,16 @@ body {
 }
 
 .sidebar .sidebar-header {
-    /* Define altura fixa para alinhar com a navbar */
     height: var(--sidebar-top-height);
     transition: padding var(--transition-speed) ease;
 }
 
 .sidebar .sidebar-header a {
-    /* d-flex e align-items-center já estão no HTML */
     width: 100%;
-    /* Garante que o link ocupe o espaço */
     height: 100%;
-    /* Garante que o link ocupe a altura */
-
-    /* ADICIONADO: Alinha o padding horizontal com os .nav-link */
     padding-left: var(--bs-nav-link-padding-x);
     padding-right: var(--bs-nav-link-padding-x);
-
-    /* ADICIONADO: Adiciona gap entre o ícone e o texto */
     gap: 0.5rem;
-    /* 8px */
-
-    /* ADICIONADO: padding e gap à transição */
     transition: justify-content var(--transition-speed) ease, padding var(--transition-speed) ease, gap var(--transition-speed) ease;
 }
 
@@ -66,65 +53,35 @@ body {
 }
 
 /* --- ESTADO COLAPSADO (Sidebar) --- */
-
-/* Adiciona margens negativas ao wrapper do header no modo colapsado */
 .sidebar.collapsed .sidebar-top-wrapper {
     margin-left: -1rem;
-    /* Anula o 'padding-left: 1rem' do p-3 */
     margin-right: -1rem;
-    /* Anula o 'padding-right: 1rem' do p-3 */
 }
-
-
-/* Header colapsado */
 .sidebar.collapsed .sidebar-header {
     padding: 0;
     margin: 0;
     height: var(--sidebar-top-height);
-    /* Manter a altura */
 }
-
 .sidebar.collapsed .sidebar-header a {
     padding: 0;
-    /* ADICIONADO: Resetar o gap no modo colapsado */
     gap: 0;
     margin: 0;
     height: 100%;
     width: 100%;
     justify-content: center;
-    /* Centraliza o ícone */
-    /* 'align-items: center' já vem do HTML (d-flex align-items-center) */
 }
-
 .sidebar.collapsed .sidebar-header a span {
     display: none;
-    /* Esconde texto */
 }
-
 .sidebar.collapsed .sidebar-header a i {
     margin: 0;
-    /* Remove margem do ícone */
 }
-
-/* Esconde texto dos outros elementos quando colapsado */
-.sidebar.collapsed .nav-link span:not(.toggle-text),
-.sidebar.collapsed .dropdown-toggle span,
-.sidebar.collapsed .theme-switcher-label span,
-.sidebar.collapsed .logout-link span {
+.sidebar.collapsed .nav-link span:not(.toggle-text) {
     display: none;
 }
 
-
-/* --- CORREÇÃO DE ESTILO: Unificado --- */
-
-/* * NOVA REGRA COMBINADA
- * Aplica a forma de "pílula" (50px) a todos os links de navegação
- * E aos itens do rodapé (logout, switch, user) no modo recolhido.
-*/
-.sidebar.collapsed .nav-pills .nav-link,
-.sidebar.collapsed .logout-link,
-.sidebar.collapsed .theme-switcher-container,
-.sidebar.collapsed .dropdown {
+/* Links da Sidebar Colapsada */
+.sidebar.collapsed .nav-pills .nav-link {
     justify-content: center;
     align-items: center;
     padding-top: 0.75rem;
@@ -135,105 +92,31 @@ body {
     height: auto;
     display: flex;
     gap: 0;
-
-    /* A forma de pílula (50px) aplicada a todos */
     width: 50px;
     margin-left: auto;
     margin-right: auto;
     border-radius: 0.375rem;
-    /* 6px */
-
-    /* Garante que o texto não quebre (embora esteja invisível) */
     white-space: nowrap;
 }
-
-/* O .dropdown-toggle (o link <a>) dentro do .dropdown tbm precisa se justificar */
-.sidebar.collapsed .dropdown .dropdown-toggle {
-    width: 100%;
-    justify-content: center;
-    /* Centraliza o <i> */
-    /* 'd-flex' e 'align-items-center' já vêm do HTML */
-}
-
-/* --- FIM DA CORREÇÃO --- */
-
-
-/* Faz com que a lista de navegação ocupe toda a largura */
 .sidebar.collapsed .nav-pills {
     margin-left: -1rem;
-    /* Anula o 'padding-left: 1rem' do p-3 */
-    margin-right: -1rem;
-    /* Anula o 'padding-right: 1rem' do p-3 */
-}
-
-/* Adiciona margens negativas ao footer para alinhar os ícones */
-.sidebar.collapsed .sidebar-footer {
-    margin-left: -1rem;
     margin-right: -1rem;
 }
 
-/* Remove margem dos ícones nesses outros links */
-.sidebar.collapsed .nav-pills .nav-link i[class*="fa-"],
-.sidebar.collapsed .dropdown-toggle i[class*="fa-"],
-.sidebar.collapsed .logout-link i[class*="fa-"] {
-    margin: 0;
-}
-
-.sidebar.collapsed .theme-switcher-label span,
-.sidebar.collapsed .theme-switcher-label i.theme-icon {
-    display: none;
-}
-
-.sidebar.collapsed .theme-switcher-label {
-    width: 0;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-    pointer-events: none;
-}
-
-/* Posição do dropdown quando colapsado */
-.sidebar.collapsed .dropdown-menu {
-    position: absolute !important;
-    left: 100%;
-    bottom: 5px;
-    /* Ajuste se necessário */
-    margin-left: 0.5rem;
-}
-
-/* Ícones gerais na sidebar (Font Awesome) - Estado Expandido */
+/* Ícones gerais na sidebar (Expandido) */
 .sidebar .nav-link:not(#sidebarToggle) i.fa-fw,
-.sidebar .dropdown-toggle i.fa-fw,
-.sidebar .logout-link i.fa-fw,
 .sidebar .sidebar-header i.fa-fw {
-    /* margin-right: 8px; */
-    /* REMOVIDO: Agora usaremos 'gap' no container */
     vertical-align: middle;
     transition: margin var(--transition-speed) ease;
 }
-
-/* ADICIONADO: 'gap' entre ícone e texto para os links de navegação */
-.sidebar .nav-link,
-.sidebar .dropdown-toggle,
-.sidebar .logout-link {
+.sidebar .nav-link {
     gap: 0.5rem;
-    /* 8px */
 }
 
-/* Alinhamento do ícone do tema */
-.sidebar .theme-switcher-label i.theme-icon {
-    /* A classe fa-fw já cuida da largura */
-    margin-right: 8px;
-    /* Adiciona a margem para o texto */
-    vertical-align: middle;
-    transition: margin var(--transition-speed) ease;
-}
-
-/* Ícones em dropdowns e botões (fora da sidebar) */
+/* Ícones em dropdowns e botões */
 .dropdown-item i[class*="fa-"] {
     margin-right: 8px;
 }
-
 .btn i[class*="fa-"] {
     vertical-align: text-bottom;
 }
@@ -247,167 +130,84 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-
 body.sidebar-collapsed .main-content {
     margin-left: var(--sidebar-width-collapsed);
 }
-
 .content {
     flex: 1;
     padding: 20px;
 }
-
 .navbar {
     border-bottom: 1px solid var(--bs-border-color);
-    /* Alinhar com a altura do header da sidebar */
     height: var(--sidebar-top-height);
     min-height: var(--sidebar-top-height);
-    /* Força a altura */
 }
-
-/* Forçar alinhamento na Navbar */
 .navbar .container-fluid {
     height: 100%;
-    /* Garante que o container-fluid use a altura total */
 }
-
-/* Garante que o brand não tenha margens que atrapalhem o alinhamento */
 .navbar .navbar-brand {
     margin-bottom: 0;
-    /* Remove a margem 'mb-0' se 'h1' a estiver sobrepondo */
     padding-top: 0;
     padding-bottom: 0;
 }
-
-/* Garante que o botão toggle se alinhe */
 .navbar #sidebarToggle {
     padding-top: 0;
     padding-bottom: 0;
     height: 100%;
-    /* Faz o botão tentar ocupar a altura */
-    /* O 'align-items-center' no HTML deve centralizar o ícone */
 }
 
-
-/* Rodapé da Sidebar (MODIFICADO: Apenas margem e borda, o conteúdo saiu) */
+/* Rodapé da Sidebar */
 .sidebar-footer {
     margin-top: auto;
     padding-top: 1rem;
     border-top: 1px solid var(--bs-border-color);
 }
 
-/* Switch de Tema (MODIFICADO: Regras específicas da navbar) */
+/* --- Estilos da Navbar (Direita) --- */
+.navbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Switch de Tema (Navbar) */
 .theme-switcher-container-navbar {
     cursor: pointer;
-    /* Remove o padding-left: 0.5rem do p-2 */
     padding-left: 0.5rem !important; 
     padding-right: 0.5rem !important;
 }
 .theme-switcher-container-navbar .form-check-input {
     cursor: pointer;
-    font-size: 1.2em;
+    font-size: 1.2em; /* Tamanho do switch */
     margin: 0;
 }
 .theme-switcher-container-navbar .form-check-label {
     cursor: pointer;
 }
-
-
-/* MODIFICADO: Antigo Switch de Tema (Sidebar) */
-.theme-switcher-container {
-    background-color: var(--bs-secondary-bg);
-    border: 1px solid var(--bs-border-color-translucent);
-    cursor: pointer;
-    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
-    /* ADICIONADO: gap para o switch de tema */
-    gap: 0.5rem;
+.theme-switcher-container-navbar .theme-icon {
+    pointer-events: none; /* Clicável pelo label */
 }
 
-.theme-switcher-container:hover {
-    background-color: var(--bs-tertiary-bg);
-}
-
-.theme-switcher-container .form-check-input {
-    cursor: pointer;
-    font-size: 1.2em;
-    margin-left: auto;
-}
-
-/* Reseta a margem do switch quando colapsado para permitir a centralização */
-.sidebar.collapsed .theme-switcher-container .form-check-input {
-    margin-left: 0;
-}
-
-
-.theme-switcher-label {
-    pointer-events: none;
-    margin-right: auto;
-}
-
-.theme-switcher-label i.theme-icon {
-    vertical-align: middle;
-}
-
-/* Link Logout (Sidebar - agora obsoleto, mas mantido por segurança) */
-.logout-link {
-    color: var(--bs-nav-link-color);
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    border-radius: var(--bs-nav-pills-border-radius);
-    /* Aplicar padding/min-height consistente */
-    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
-    min-height: 50px;
-}
-
-.logout-link:hover {
-    color: var(--bs-nav-link-hover-color);
-    background-color: var(--bs-tertiary-bg);
-}
-
-/* Dropdown Usuário no Rodapé Colapsado (Sidebar - agora obsoleto) */
-/* A regra unificada acima já cuida do 'div.dropdown' */
-.sidebar.collapsed .dropdown>a i {
-    margin: 0;
-}
-
-/* Tooltips */
-body .tooltip .tooltip-inner {
-    background-color: var(--bs-emphasis-color);
-    color: var(--bs-body-bg);
-}
-
-body .tooltip.bs-tooltip-auto[data-popper-placement^=right] .tooltip-arrow::before,
-body .tooltip.bs-tooltip-end .tooltip-arrow::before {
-    border-right-color: var(--bs-emphasis-color);
-}
-
-/* Tooltip para a navbar */
-body .tooltip.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before,
-body .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
-    border-bottom-color: var(--bs-emphasis-color);
-}
-
-
-/* --- NOVOS ESTILOS ADICIONADOS --- */
-
-/* Bloco de controles na Navbar */
-.navbar-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem; /* Espaçamento entre o seletor de tema e o perfil */
-}
-
-/* Dropdown de perfil na Navbar */
+/* Dropdown de perfil (Navbar) */
 .navbar-profile-dropdown {
     padding: 0.5rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem; /* Espaço entre ícone e texto */
+    gap: 0.5rem;
 }
 
-/* Ajusta o ícone do seletor de tema na navbar */
-.theme-switcher-container-navbar .theme-icon {
-     /* Garante que o ícone seja clicável com o label */
-    pointer-events: none;
+/* --- Tooltips --- */
+body .tooltip .tooltip-inner {
+    background-color: var(--bs-emphasis-color);
+    color: var(--bs-body-bg);
+}
+/* Seta (Sidebar colapsada) */
+body .tooltip.bs-tooltip-auto[data-popper-placement^=right] .tooltip-arrow::before,
+body .tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: var(--bs-emphasis-color);
+}
+/* Seta (Navbar) */
+body .tooltip.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before,
+body .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: var(--bs-emphasis-color);
 }

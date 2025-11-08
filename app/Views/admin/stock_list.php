@@ -116,7 +116,7 @@
             }
         });
 
-        // 4. Lógica do botão "Excluir Selecionados" (MODIFICADO)
+        // 4. Lógica do botão "Excluir Selecionados" (MODIFICADO PARA AJAX)
         $('#batchDeleteStockForm').on('submit', function(e) {
             e.preventDefault(); // Impede o envio imediato
             const form = $(this); // Pega o formulário
@@ -127,10 +127,52 @@
                 return false;
             }
 
-            // Se a validação passar, mostra o modal de confirmação
             const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> códigos selecionados?<br><br><small>APENAS códigos disponíveis (não vendidos) serão excluídos.</small>';
+            
             showConfirm(msg, 'Confirmar Exclusão', function() {
-                form.get(0).submit(); // Envia o formulário de verdade
+                // --- INÍCIO DA LÓGICA AJAX ---
+                var $contentContainer = $('main.content');
+                var $pageTitle = $('h1.mb-4');
+                $pageTitle.text('Excluindo...');
+                $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    dataType: 'html', // Espera o HTML da página redirecionada
+                    
+                    success: function(responseHtml) {
+                        try {
+                            var $newHtml = $('<div>').html(responseHtml);
+                            var newTitle = $newHtml.find('h1.mb-4').html();
+                            var newContent = $newHtml.find('main.content').html();
+                            var newScripts = $newHtml.find('#ajax-scripts').html();
+                            var newPageTitle = $newHtml.find('title').text();
+
+                            if (newContent) {
+                                $pageTitle.html(newTitle);
+                                $contentContainer.html(newContent);
+                                if (newPageTitle) document.title = newPageTitle;
+                                
+                                $('#ajax-scripts-container').remove();
+                                if (newScripts) {
+                                    var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
+                                    $('body').append($scriptContainer);
+                                }
+                                $contentContainer.scrollTop(0);
+                            } else {
+                                location.reload(); // Fallback
+                            }
+                        } catch(e) {
+                            location.reload(); // Fallback
+                        }
+                    },
+                    error: function() {
+                        location.reload(); // Fallback em caso de erro
+                    }
+                });
+                // --- FIM DA LÓGICA AJAX ---
             });
         });
     });

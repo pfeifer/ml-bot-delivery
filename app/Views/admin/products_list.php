@@ -117,18 +117,15 @@
         });
 
         // 4. Lógica do botão "Editar Selecionado" (para o modal)
-        // Usamos 'mousedown' para definir o data-url ANTES do script do modal ser disparado pelo 'click'
         $('#editSelectedBtnModal').on('mousedown', function(e) {
             const selected = productsTable.rows().nodes().to$().find('.row-checkbox:checked');
             
             if (selected.length === 0) {
-                // MODIFICADO: Usa a nova função showAlert
                 showAlert('Por favor, selecione um produto para editar.', 'Atenção');
                 e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return false;
             }
             if (selected.length > 1) {
-                // MODIFICADO: Usa a nova função showAlert
                 showAlert('Você só pode editar um produto por vez.', 'Atenção');
                 e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return false;
@@ -136,11 +133,10 @@
             
             const productId = selected.val();
             const editUrl = '<?= rtrim(route_to('admin.products.edit', 1), '1') ?>' + productId;
-            // Define o URL no atributo data-url para o script global pegar
             $(this).attr('data-url', editUrl); 
         });
 
-        // 5. Lógica do botão "Excluir Selecionados" (MODIFICADO)
+        // 5. Lógica do botão "Excluir Selecionados" (MODIFICADO PARA AJAX)
         $('#batchDeleteForm').on('submit', function(e) {
             e.preventDefault(); // Impede o envio imediato
             const form = $(this);
@@ -151,10 +147,57 @@
                 return false;
             }
             
-            // Se a validação passar, mostra o modal de confirmação
             const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> produtos selecionados?';
+            
             showConfirm(msg, 'Confirmar Exclusão', function() {
-                form.get(0).submit(); // Envia o formulário de verdade
+                // --- INÍCIO DA LÓGICA AJAX ---
+                // Mostra um spinner/loading
+                var $contentContainer = $('main.content');
+                var $pageTitle = $('h1.mb-4');
+                $pageTitle.text('Excluindo...');
+                $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    dataType: 'html', // Espera o HTML da página redirecionada
+                    
+                    success: function(responseHtml) {
+                        // A requisição POST foi, o redirect foi seguido,
+                        // e 'responseHtml' é a página de listagem ATUALIZADA.
+                        // Agora usamos a mesma lógica do template.js para injetar o conteúdo.
+                        try {
+                            var $newHtml = $('<div>').html(responseHtml);
+                            var newTitle = $newHtml.find('h1.mb-4').html();
+                            var newContent = $newHtml.find('main.content').html();
+                            var newScripts = $newHtml.find('#ajax-scripts').html();
+                            var newPageTitle = $newHtml.find('title').text();
+
+                            if (newContent) {
+                                $pageTitle.html(newTitle);
+                                $contentContainer.html(newContent);
+                                if (newPageTitle) document.title = newPageTitle;
+                                
+                                $('#ajax-scripts-container').remove();
+                                if (newScripts) {
+                                    var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
+                                    $('body').append($scriptContainer);
+                                }
+                                $contentContainer.scrollTop(0);
+                            } else {
+                                location.reload(); // Fallback
+                            }
+                        } catch(e) {
+                            location.reload(); // Fallback
+                        }
+                    },
+                    error: function() {
+                        // Se a exclusão falhar (erro 500, etc)
+                        location.reload(); // Recarrega a página para mostrar o erro (que virá do redirect-back)
+                    }
+                });
+                // --- FIM DA LÓGICA AJAX ---
             });
         });
     });

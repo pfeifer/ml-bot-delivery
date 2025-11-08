@@ -2,17 +2,17 @@
 
 use App\Controllers\BaseController;
 use App\Models\ProductModel;
-use App\Models\MessageTemplateModel; // << Import
+use App\Models\MessageTemplateModel;
 
 class ProductsController extends BaseController
 {
     protected $productModel;
-    protected $templateModel; // << Propriedade
+    protected $templateModel;
 
     public function __construct()
     {
         $this->productModel = new ProductModel();
-        $this->templateModel = new MessageTemplateModel(); // << Instanciar
+        $this->templateModel = new MessageTemplateModel();
         helper(['form']);
     }
 
@@ -22,34 +22,39 @@ class ProductsController extends BaseController
     public function index()
     {
         $data['products'] = $this->productModel->orderBy('id', 'DESC')->findAll(); 
-
         return view('admin/products_list', $data);
     }
 
     /**
      * Mostra o formulário para criar um novo produto.
+     * REMOVIDO: Lógica não-AJAX removida.
      */
     public function new()
     {
+        // Apenas responde a requisições AJAX (Modais)
+        if (! $this->request->isAJAX()) {
+             return redirect()->route('admin.products')->with('error', 'Acesso inválido.');
+        }
+
         $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
         $data['action'] = 'create';
         $data['product'] = null;
         
-        // MODIFICADO: Se for AJAX (modal), retorna a view parcial
-        if ($this->request->isAJAX()) {
-            // Usaremos um novo ficheiro de view SÓ para o conteúdo do modal
-            return view('admin/products_form_modal_content', $data);
-        }
-
-        // Se não for AJAX, carrega a página completa (obsoleto, mas mantém a funcionalidade)
-        return view('admin/products_form', $data);
+        // Retorna a view parcial para o modal
+        return view('admin/products_form_modal_content', $data);
     }
 
     /**
      * Processa o formulário de criação de produto.
+     * REMOVIDO: Lógica não-AJAX removida.
      */
     public function create()
     {
+        // Apenas responde a requisições AJAX
+        if (! $this->request->isAJAX()) {
+             return redirect()->route('admin.products')->with('error', 'Acesso inválido.');
+        }
+
         $rules = [
             'ml_item_id'       => 'required|is_unique[products.ml_item_id]|max_length[30]',
             'title'            => 'permit_empty|max_length[255]',
@@ -59,6 +64,7 @@ class ProductsController extends BaseController
         
         $templateId = $this->request->getPost('message_template_id');
 
+        // Adiciona regra de validação condicional
         if (!empty($templateId)) {
             $rules['message_template_id'] .= '|is_not_unique[message_templates.id]';
         }
@@ -69,26 +75,21 @@ class ProductsController extends BaseController
             ]
         ];
 
-        // MODIFICADO: Resposta AJAX em caso de falha de validação
+        // Resposta AJAX em caso de falha de validação
         if (! $this->validate($rules, $messages)) { 
-             if ($this->request->isAJAX()) {
-                 $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
-                 $data['action'] = 'create';
-                 $data['product'] = null; 
-                 // Passa os erros para a view parcial
-                 $data['validationErrors'] = $this->validator->getErrors(); 
+             $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
+             $data['action'] = 'create';
+             $data['product'] = null; 
+             $data['validationErrors'] = $this->validator->getErrors(); 
 
-                 return $this->response->setJSON([
-                     'success' => false,
-                     'message' => 'Erro de validação',
-                     // Retorna o HTML do formulário atualizado com os erros
-                     'form_html' => view('admin/products_form_modal_content', $data)
-                 ]);
-             }
-             // Fallback para não-AJAX
-             return redirect()->route('admin.products.new')->withInput()->with('errors', $this->validator->getErrors());
+             return $this->response->setJSON([
+                 'success' => false,
+                 'message' => 'Erro de validação',
+                 'form_html' => view('admin/products_form_modal_content', $data)
+             ]);
         }
 
+        // Se a validação passar, salva os dados
         $dataToSave = [
             'ml_item_id'       => $this->request->getPost('ml_item_id'),
             'title'            => $this->request->getPost('title'),
@@ -97,66 +98,61 @@ class ProductsController extends BaseController
         ];
 
         if ($this->productModel->insert($dataToSave)) {
-            // MODIFICADO: Resposta AJAX em caso de sucesso
-            if ($this->request->isAJAX()) {
-                 session()->setFlashdata('success', 'Produto cadastrado com sucesso!');
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Produto cadastrado com sucesso!'
-                ]);
-            }
-            return redirect()->route('admin.products')->with('success', 'Produto cadastrado com sucesso!');
-        } else {
-             $errors = $this->productModel->errors() ?: ['database' => 'Erro desconhecido ao salvar o produto.'];
-             // MODIFICADO: Resposta AJAX em caso de erro de DB
-             if ($this->request->isAJAX()) {
-                 return $this->response->setJSON([
-                     'success' => false,
-                     'message' => implode(' ', $errors)
-                 ]);
-             }
-            return redirect()->route('admin.products.new')->withInput()->with('errors', $errors);
-        }
+            // Resposta AJAX de sucesso
+            session()->setFlashdata('success', 'Produto cadastrado com sucesso!');
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Produto cadastrado com sucesso!'
+            ]);
+        } 
+        
+        // Resposta AJAX em caso de erro de DB
+        $errors = $this->productModel->errors() ?: ['database' => 'Erro desconhecido ao salvar o produto.'];
+        return $this->response->setJSON([
+             'success' => false,
+             'message' => implode(' ', $errors)
+        ]);
     }
 
     /**
      * Mostra o formulário para editar um produto existente.
+     * REMOVIDO: Lógica não-AJAX removida.
      */
     public function edit($id = null)
     {
+        // Apenas responde a requisições AJAX
+        if (! $this->request->isAJAX()) {
+             return redirect()->route('admin.products')->with('error', 'Acesso inválido.');
+        }
+
         $product = $this->productModel->find($id);
         if (!$product) {
-             // MODIFICADO: Resposta AJAX 404
-             if ($this->request->isAJAX()) {
-                return $this->response->setStatusCode(404)->setBody('Produto não encontrado.');
-             }
-             return redirect()->route('admin.products')->with('error', 'Produto não encontrado.');
+             // Resposta AJAX 404
+             return $this->response->setStatusCode(404)->setBody('Produto não encontrado.');
         }
 
         $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
         $data['action'] = 'update';
         $data['product'] = $product;
         
-        // MODIFICADO: Se for AJAX (modal), retorna a view parcial
-        if ($this->request->isAJAX()) {
-            return view('admin/products_form_modal_content', $data);
-        }
-
-        return view('admin/products_form', $data);
+        // Retorna a view parcial para o modal
+        return view('admin/products_form_modal_content', $data);
     }
 
     /**
      * Processa o formulário de atualização de produto.
+     * REMOVIDO: Lógica não-AJAX removida.
      */
     public function update($id = null)
     {
+         // Apenas responde a requisições AJAX
+        if (! $this->request->isAJAX()) {
+             return redirect()->route('admin.products')->with('error', 'Acesso inválido.');
+        }
+
          $product = $this->productModel->find($id);
         if (!$product) {
-             // MODIFICADO: Resposta AJAX 404
-             if ($this->request->isAJAX()) {
-                return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Produto não encontrado.']);
-             }
-             return redirect()->route('admin.products')->with('error', 'Produto não encontrado.');
+             return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Produto não encontrado.']);
         }
 
          $rules = [
@@ -178,21 +174,18 @@ class ProductsController extends BaseController
             ]
         ];
 
-         // MODIFICADO: Resposta AJAX em caso de falha de validação
+         // Resposta AJAX em caso de falha de validação
          if (! $this->validate($rules, $messages)) {
-             if ($this->request->isAJAX()) {
-                 $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
-                 $data['action'] = 'update';
-                 $data['product'] = $product;
-                 $data['validationErrors'] = $this->validator->getErrors(); // Passa os erros
+             $data['templates'] = $this->templateModel->orderBy('name', 'ASC')->findAll();
+             $data['action'] = 'update';
+             $data['product'] = $product;
+             $data['validationErrors'] = $this->validator->getErrors(); // Passa os erros
 
-                 return $this->response->setJSON([
-                     'success' => false,
-                     'message' => 'Erro de validação',
-                     'form_html' => view('admin/products_form_modal_content', $data)
-                 ]);
-             }
-             return redirect()->route('admin.products.edit', $id)->withInput()->with('errors', $this->validator->getErrors());
+             return $this->response->setJSON([
+                 'success' => false,
+                 'message' => 'Erro de validação',
+                 'form_html' => view('admin/products_form_modal_content', $data)
+             ]);
         }
 
          $dataToUpdate = [
@@ -203,30 +196,24 @@ class ProductsController extends BaseController
         ];
 
         if ($this->productModel->update($id, $dataToUpdate)) {
-             // MODIFICADO: Resposta AJAX em caso de sucesso
-             if ($this->request->isAJAX()) {
-                 session()->setFlashdata('success', 'Produto atualizado com sucesso!');
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Produto atualizado com sucesso!'
-                ]);
-            }
-             return redirect()->route('admin.products')->with('success', 'Produto atualizado com sucesso!');
-        } else {
-             $errors = $this->productModel->errors() ?: ['database' => 'Erro desconhecido ao atualizar o produto.'];
-             // MODIFICADO: Resposta AJAX em caso de erro de DB
-             if ($this->request->isAJAX()) {
-                 return $this->response->setJSON([
-                     'success' => false,
-                     'message' => implode(' ', $errors)
-                 ]);
-             }
-             return redirect()->route('admin.products.edit', $id)->withInput()->with('errors', $errors);
-        }
+             // Resposta AJAX de sucesso
+             session()->setFlashdata('success', 'Produto atualizado com sucesso!');
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Produto atualizado com sucesso!'
+            ]);
+        } 
+
+        // Resposta AJAX em caso de erro de DB
+         $errors = $this->productModel->errors() ?: ['database' => 'Erro desconhecido ao atualizar o produto.'];
+         return $this->response->setJSON([
+             'success' => false,
+             'message' => implode(' ', $errors)
+         ]);
     }
 
     /**
-     * Exclui um produto. (Não precisa de modal)
+     * Exclui um produto. (Ação direta, sem modal)
      */
     public function delete($id = null)
     {
@@ -243,7 +230,7 @@ class ProductsController extends BaseController
     }
 
     /**
-     * Processa a exclusão em massa de produtos. (Não precisa de modal)
+     * Processa a exclusão em massa de produtos. (Ação direta)
      */
     public function deleteBatch()
     {

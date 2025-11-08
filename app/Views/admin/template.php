@@ -5,13 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $this->renderSection('title') ?> - Admin ML Bot</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="<?= base_url('css/template.css') ?>">
+    
     <?= $this->renderSection('styles') ?>
 </head>
 
@@ -26,10 +25,11 @@
                 </a>
             </div>
         </div>
+        
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="<?= route_to('admin.dashboard') ?>"
-                    class="nav-link ajax-link d-flex align-items-center <?= (uri_string() === 'admin') ? 'active' : 'link-body-emphasis' ?>">
+                    class="nav-link ajax-link d-flex align-items-center <?= (uri_string() === 'admin' || uri_string() === 'admin/') ? 'active' : 'link-body-emphasis' ?>">
                     <i class="fa-solid fa-gauge fa-lg fa-fw"></i>
                     <span>Dashboard</span>
                 </a>
@@ -58,7 +58,7 @@
             <li class="nav-item">
                 <a href="<?= route_to('admin.mercadolivre.settings') ?>" 
                    class="nav-link ajax-link d-flex align-items-center 
-                        <?php // Ativa o link se estiver na página de settings OU nas páginas de CRUD de templates
+                        <?php 
                         if (str_starts_with(uri_string(), 'admin/mercadolivre') || str_starts_with(uri_string(), 'admin/message-templates')) {
                             echo 'active';
                         } else {
@@ -68,8 +68,8 @@
                     <i class="fa-solid fa-handshake-simple fa-lg fa-fw"></i>
                     <span>Mercado Livre</span>
                 </a>
-                </li>
-            </ul>
+            </li>
+        </ul>
 
         </nav>
     <div class="main-content">
@@ -102,7 +102,7 @@
                         <ul class="dropdown-menu text-small shadow dropdown-menu-end" aria-labelledby="dropdownUser">
                             <li>
                                 <h6 class="dropdown-header">
-                                    <?= esc(session()->get('admin_first_name') ?: 'Admin') ?>
+                                    <?= esc(session()->get('admin_email') ?: 'admin@email.com') ?>
                                 </h6>
                             </li>
                             <li>
@@ -126,17 +126,26 @@
         <main class="content p-4"> 
             <h1 class="mb-4"><?= $this->renderSection('page_title') ?></h1>
             
-            <?php // Flashdata (Sucesso, Erro) ?>
+            <?php // Flashdata (Sucesso, Erro, Info) ?>
             <?php if (session()->getFlashdata('success')): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-check-circle fa-fw me-2"></i>
                     <?= session()->getFlashdata('success') ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
             <?php if (session()->getFlashdata('error')): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation fa-fw me-2"></i>
                     <?= session()->getFlashdata('error') ?>
-                    <button typebutton" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+            <?php if (session()->getFlashdata('info')): ?>
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-info fa-fw me-2"></i>
+                    <?= session()->getFlashdata('info') ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
 
@@ -144,7 +153,7 @@
                 $validationErrors = session()->getFlashdata('errors');
                 if (!empty($validationErrors) && is_array($validationErrors)): ?>
                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                      <h5 class="alert-heading">Erro de Validação</h5>
+                      <h5 class="alert-heading"><i class="fa-solid fa-circle-exclamation fa-fw me-2"></i>Erro de Validação</h5>
                       <p>Por favor, corrija os problemas abaixo:</p>
                      <ul>
                          <?php foreach ($validationErrors as $error): ?>
@@ -338,6 +347,7 @@
                 ajaxModal.show();
 
                 // Faz a requisição AJAX para buscar o conteúdo do formulário
+                // CORREÇÃO: Restaurado $.get() original
                 $.get(url, function(responseHtml) {
                     // O backend deve retornar SÓ o HTML do formulário
                     $modalBody.html(responseHtml);
@@ -358,6 +368,7 @@
             });
 
             // 2. Lógica para SUBMETER o formulário dentro do modal
+            // CORREÇÃO: Restaurado o seletor original
             $modalBody.on('submit', 'form', function(e) {
                 e.preventDefault(); // Impede o submit tradicional
 
@@ -380,39 +391,40 @@
                             // Sucesso!
                             ajaxModal.hide();
                             
-                            // Força o reload da página inteira para atualizar a tabela.
-                            // É mais simples que implementar o reload AJAX da tabela (server-side).
-                            // Adicionamos um flash message de sucesso via JS
-                            if (response.message) {
-                                // Para isso funcionar, o controller não deve mais redirecionar
-                                // A lógica de reload já mostra a mensagem flash (se o controller definir)
+                            // CORREÇÃO: Lógica "sem piscar" (agora vai funcionar)
+                            let $activeLink = $('#adminSidebar a.nav-link.active');
+                            if ($activeLink.length === 0) {
+                                $activeLink = $('#adminSidebar a.nav-link[href="<?= route_to('admin.dashboard') ?>"]');
                             }
-                            location.reload();
+
+                            if ($activeLink.length > 0 && $activeLink.hasClass('ajax-link')) {
+                                // Clica no link ativo para recarregar o conteúdo via AJAX
+                                // (O template.js agora permite isso)
+                                $activeLink.click();
+                            } else {
+                                // Fallback (se algo der errado)
+                                location.reload(); 
+                            }
 
                         } else if (response.form_html) {
                             // Erro de validação
-                            // Recarrega o corpo do modal com o novo HTML (que contém os erros)
                             $modalBody.html(response.form_html);
-                            // Re-habilita o botão
-                            $submitButton.prop('disabled', false).html(originalButtonHtml);
 
-                            // Re-inicializa scripts específicos do modal
                             if (typeof window.initModalScripts === 'function') {
                                 window.initModalScripts($modalBody);
                             }
 
                         } else {
                              // Usa o novo modal de alerta
+                             ajaxModal.hide(); 
                              showAlert(response.message || 'Ocorreu um erro desconhecido.', 'Erro');
-                             $submitButton.prop('disabled', false).html(originalButtonHtml);
                         }
                     },
                     error: function(jqXHR) {
                         // Erro grave (500, 404, etc.)
                         console.error('Erro no AJAX submit:', jqXHR.responseText);
-                        // Usa o novo modal de alerta
+                        ajaxModal.hide();
                         showAlert('Ocorreu um erro grave no servidor. Tente novamente.', 'Erro Grave');
-                        $submitButton.prop('disabled', false).html(originalButtonHtml);
                     }
                 });
             });
