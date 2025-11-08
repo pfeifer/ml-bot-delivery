@@ -19,8 +19,7 @@
             Adicionar ao Estoque
         </a>
         
-        <button type="submit" class="btn btn-outline-danger" id="deleteSelectedStockBtn" 
-                onclick="return confirm('Tem certeza que deseja excluir os códigos selecionados?\n\nAPENAS códigos disponíveis (não vendidos) serão excluídos.');">
+        <button type="submit" class="btn btn-outline-danger" id="deleteSelectedStockBtn">
             <i class="fa-solid fa-trash fa-fw"></i>
             Excluir Selecionados
         </button>
@@ -117,14 +116,22 @@
             }
         });
 
-        // 4. Lógica do botão "Excluir Selecionados"
+        // 4. Lógica do botão "Excluir Selecionados" (MODIFICADO)
         $('#batchDeleteStockForm').on('submit', function(e) {
+            e.preventDefault(); // Impede o envio imediato
+            const form = $(this); // Pega o formulário
             const selected = stockTable.rows().nodes().to$().find('.row-checkbox-stock:checked');
+            
             if (selected.length === 0) {
-                alert('Por favor, selecione pelo menos um código disponível para excluir.');
-                e.preventDefault(); // Impede o envio do formulário
+                showAlert('Por favor, selecione pelo menos um código disponível para excluir.', 'Atenção');
                 return false;
             }
+
+            // Se a validação passar, mostra o modal de confirmação
+            const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> códigos selecionados?<br><br><small>APENAS códigos disponíveis (não vendidos) serão excluídos.</small>';
+            showConfirm(msg, 'Confirmar Exclusão', function() {
+                form.get(0).submit(); // Envia o formulário de verdade
+            });
         });
     });
 

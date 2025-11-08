@@ -71,34 +71,7 @@
                 </li>
             </ul>
 
-        <div class="sidebar-footer">
-            <a href="<?= route_to('logout') ?>" class="logout-link mb-2">
-                <i class="fa-solid fa-right-from-bracket fa-lg fa-fw"></i>
-                <span>Sair</span>
-            </a>
-            <div
-                class="form-check form-switch mb-3 d-flex align-items-center justify-content-between theme-switcher-container p-2 rounded">
-                <label class="form-check-label theme-switcher-label d-flex align-items-center" for="themeSwitch">
-                    
-                    <i class="fa-solid fa-moon theme-icon fa-lg fa-fw"></i> 
-                    
-                    <span class="theme-switcher-text">Modo Escuro</span>
-                </label>
-                <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
-            </div>
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
-                    id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-placement="right"
-                    data-bs-title="Opções do Usuário">
-                    <i class="fa-solid fa-user fa-lg fa-fw"></i>
-                    <span class="fw-bold"><?= esc(session()->get('admin_first_name') ?: 'Admin') ?></span>
-                </a>
-                <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser">
-                    <li><a class="dropdown-item disabled" href="#">Perfil (em breve)</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+        </nav>
     <div class="main-content">
         <nav class="navbar navbar-expand navbar-light bg-body-tertiary">
             <div class="container-fluid align-items-center">
@@ -109,8 +82,46 @@
                 </button>
 
                 <span class="navbar-brand mb-0 h1 ms-2 d-none d-md-inline">ML Bot Delivery</span>
-                <div class="ms-auto"> </div>
-            </div>
+                
+                <div class="ms-auto navbar-controls"> 
+                    
+                    <div class="form-check form-switch d-flex align-items-center theme-switcher-container-navbar p-2 rounded">
+                        <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch" title="Alterar tema">
+                        <label class="form-check-label theme-switcher-label ms-2" for="themeSwitch">
+                            <i class="fa-solid fa-moon theme-icon fa-lg fa-fw"></i> 
+                        </label>
+                    </div>
+
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle navbar-profile-dropdown"
+                            id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false"
+                            title="Opções do Usuário">
+                            <i class="fa-solid fa-user fa-lg fa-fw"></i>
+                            <span class="d-none d-sm-inline fw-bold"><?= esc(session()->get('admin_first_name') ?: 'Admin') ?></span>
+                        </a>
+                        <ul class="dropdown-menu text-small shadow dropdown-menu-end" aria-labelledby="dropdownUser">
+                            <li>
+                                <h6 class="dropdown-header">
+                                    <?= esc(session()->get('admin_first_name') ?: 'Admin') ?>
+                                </h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" 
+                                   href="<?= route_to('admin.mercadolivre.settings') ?>" 
+                                   onclick="localStorage.setItem('mlSettingsActiveTab', '#tab-profile');">
+                                    <i class="fa-solid fa-user-gear fa-fw me-2"></i> Perfil / Vendedor
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="<?= route_to('logout') ?>">
+                                    <i class="fa-solid fa-right-from-bracket fa-fw me-2"></i> Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                </div>
         </nav>
         <main class="content p-4"> 
             <h1 class="mb-4"><?= $this->renderSection('page_title') ?></h1>
@@ -179,7 +190,112 @@
             </div>
         </div>
     </div>
+    
+    <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="alertModalLabel">Atenção</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="alertModalBody">
+            ...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmModalLabel">Confirmar Ação</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="confirmModalBody">
+            ...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="confirmModalConfirmBtn">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
     <script>
+    // Variáveis globais para instâncias dos modais
+    var alertModalInstance = null;
+    var confirmModalInstance = null;
+    
+    /**
+     * Função para exibir um alerta Bootstrap 5
+     * @param {string} message A mensagem a ser exibida
+     * @param {string} [title='Atenção'] O título opcional do modal
+     */
+    function showAlert(message, title = 'Atenção') {
+        if (!alertModalInstance) {
+             const alertModalElement = document.getElementById('alertModal');
+             if (alertModalElement) {
+                 alertModalInstance = new bootstrap.Modal(alertModalElement);
+             } else {
+                 console.error('Elemento #alertModal não encontrado. Recorrendo ao alert() nativo.');
+                 alert(message);
+                 return;
+             }
+        }
+        
+        // Define o título e o corpo
+        document.getElementById('alertModalLabel').textContent = title;
+        document.getElementById('alertModalBody').innerHTML = message.replace(/\n/g, '<br>');
+        
+        // Exibe o modal
+        alertModalInstance.show();
+    }
+    
+    /**
+     * Função para exibir um modal de confirmação Bootstrap 5
+     * @param {string} message A mensagem a ser exibida
+     * @param {string} [title='Confirmar Ação'] O título opcional do modal
+     * @param {function} onConfirm O callback a ser executado se o usuário confirmar
+     */
+    function showConfirm(message, title = 'Confirmar Ação', onConfirm) {
+        if (!confirmModalInstance) {
+             const confirmModalElement = document.getElementById('confirmModal');
+             if (confirmModalElement) {
+                 confirmModalInstance = new bootstrap.Modal(confirmModalElement);
+             } else {
+                 console.error('Elemento #confirmModal não encontrado. Recorrendo ao confirm() nativo.');
+                 if (confirm(message)) {
+                     onConfirm();
+                 }
+                 return;
+             }
+        }
+        
+        document.getElementById('confirmModalLabel').textContent = title;
+        document.getElementById('confirmModalBody').innerHTML = message.replace(/\n/g, '<br>');
+        
+        // Pega o botão de confirmar
+        const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+        
+        // Limpa handlers de clique anteriores e anexa o novo
+        // Usamos .one() do jQuery para garantir que o clique só seja registrado uma vez
+        $(confirmBtn).off('click').one('click', function() {
+            if(typeof onConfirm === 'function') {
+                onConfirm();
+            }
+            confirmModalInstance.hide();
+        });
+        
+        confirmModalInstance.show();
+    }
+    
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Verifica se o jQuery está carregado
         if (typeof jQuery === 'undefined') {
@@ -189,7 +305,7 @@
 
         (function($) { // Wrapper do jQuery
             
-            // Instância reutilizável do Modal Bootstrap
+            // Instância reutilizável do Modal Bootstrap (AJAX)
             var ajaxModalElement = document.getElementById('ajaxModal');
             if (!ajaxModalElement) return; // Sai se o modal não existir
             
@@ -286,14 +402,16 @@
                             }
 
                         } else {
-                             alert(response.message || 'Ocorreu um erro desconhecido.');
+                             // Usa o novo modal de alerta
+                             showAlert(response.message || 'Ocorreu um erro desconhecido.', 'Erro');
                              $submitButton.prop('disabled', false).html(originalButtonHtml);
                         }
                     },
                     error: function(jqXHR) {
                         // Erro grave (500, 404, etc.)
                         console.error('Erro no AJAX submit:', jqXHR.responseText);
-                        alert('Ocorreu um erro grave no servidor. Tente novamente.');
+                        // Usa o novo modal de alerta
+                        showAlert('Ocorreu um erro grave no servidor. Tente novamente.', 'Erro Grave');
                         $submitButton.prop('disabled', false).html(originalButtonHtml);
                     }
                 });

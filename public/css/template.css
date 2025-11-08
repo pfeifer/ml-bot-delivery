@@ -289,14 +289,31 @@ body.sidebar-collapsed .main-content {
 }
 
 
-/* Rodapé da Sidebar */
+/* Rodapé da Sidebar (MODIFICADO: Apenas margem e borda, o conteúdo saiu) */
 .sidebar-footer {
     margin-top: auto;
     padding-top: 1rem;
     border-top: 1px solid var(--bs-border-color);
 }
 
-/* Switch de Tema */
+/* Switch de Tema (MODIFICADO: Regras específicas da navbar) */
+.theme-switcher-container-navbar {
+    cursor: pointer;
+    /* Remove o padding-left: 0.5rem do p-2 */
+    padding-left: 0.5rem !important; 
+    padding-right: 0.5rem !important;
+}
+.theme-switcher-container-navbar .form-check-input {
+    cursor: pointer;
+    font-size: 1.2em;
+    margin: 0;
+}
+.theme-switcher-container-navbar .form-check-label {
+    cursor: pointer;
+}
+
+
+/* MODIFICADO: Antigo Switch de Tema (Sidebar) */
 .theme-switcher-container {
     background-color: var(--bs-secondary-bg);
     border: 1px solid var(--bs-border-color-translucent);
@@ -331,7 +348,7 @@ body.sidebar-collapsed .main-content {
     vertical-align: middle;
 }
 
-/* Link Logout */
+/* Link Logout (Sidebar - agora obsoleto, mas mantido por segurança) */
 .logout-link {
     color: var(--bs-nav-link-color);
     display: flex;
@@ -348,7 +365,7 @@ body.sidebar-collapsed .main-content {
     background-color: var(--bs-tertiary-bg);
 }
 
-/* Dropdown Usuário no Rodapé Colapsado */
+/* Dropdown Usuário no Rodapé Colapsado (Sidebar - agora obsoleto) */
 /* A regra unificada acima já cuida do 'div.dropdown' */
 .sidebar.collapsed .dropdown>a i {
     margin: 0;
@@ -369,4 +386,28 @@ body .tooltip.bs-tooltip-end .tooltip-arrow::before {
 body .tooltip.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before,
 body .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
     border-bottom-color: var(--bs-emphasis-color);
+}
+
+
+/* --- NOVOS ESTILOS ADICIONADOS --- */
+
+/* Bloco de controles na Navbar */
+.navbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Espaçamento entre o seletor de tema e o perfil */
+}
+
+/* Dropdown de perfil na Navbar */
+.navbar-profile-dropdown {
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Espaço entre ícone e texto */
+}
+
+/* Ajusta o ícone do seletor de tema na navbar */
+.theme-switcher-container-navbar .theme-icon {
+     /* Garante que o ícone seja clicável com o label */
+    pointer-events: none;
 }

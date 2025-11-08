@@ -8,15 +8,21 @@
 
 <ul class="nav nav-tabs" id="mlSettingsTabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="messages-tab" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab" aria-controls="tab-messages" aria-selected="true">
-            <i class="fa-solid fa-envelope-open-text fa-fw"></i>
-            Templates de Mensagem
+        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab" aria-controls="tab-profile" aria-selected="false">
+            <i class="fa-solid fa-user-gear fa-fw"></i>
+            Perfil do Vendedor
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="credentials-tab" data-bs-toggle="tab" data-bs-target="#tab-credentials" type="button" role="tab" aria-controls="tab-credentials" aria-selected="false">
+        <button class="nav-link active" id="credentials-tab" data-bs-toggle="tab" data-bs-target="#tab-credentials" type="button" role="tab" aria-controls="tab-credentials" aria-selected="true">
             <i class="fa-solid fa-key fa-fw"></i>
             Credenciais e Status
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab" aria-controls="tab-messages" aria-selected="false">
+            <i class="fa-solid fa-envelope-open-text fa-fw"></i>
+            Templates de Mensagem
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -29,7 +35,7 @@
 
 <div class="tab-content" id="mlSettingsTabsContent">
     
-    <div class="tab-pane fade show active" id="tab-messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
+    <div class="tab-pane fade" id="tab-messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
         <div class="p-3 border border-top-0 rounded-bottom">
             
             <p>Gerencie os templates de mensagem. O "Template Padrão (ID #1)" será usado se nenhum for especificado no cadastro do produto.</p>
@@ -56,8 +62,7 @@
                         Editar Selecionado
                     </button>
                     
-                    <button type="submit" class="btn btn-outline-danger" id="deleteSelectedTemplateBtn" 
-                            onclick="return confirm('Tem certeza que deseja excluir os templates selecionados?\n\nO Template Padrão (ID 1) não pode ser excluído.');">
+                    <button type="submit" class="btn btn-outline-danger" id="deleteSelectedTemplateBtn">
                         <i class="fa-solid fa-trash fa-fw"></i>
                         Excluir Selecionados
                     </button>
@@ -120,97 +125,42 @@
         </div>
     </div>
     
-    <div class="tab-pane fade" id="tab-credentials" role="tabpanel" aria-labelledby="credentials-tab" tabindex="0">
+    <div class="tab-pane fade" id="tab-profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
         <div class="p-3 border border-top-0 rounded-bottom">
-            
-            <div id="refresh-alert-placeholder" class="mb-3"></div>
             <?php if (isset($seller_info) && $seller_info !== null): ?>
                 
                 <div class="alert alert-success" role="alert">
                     <i class="fa-solid fa-check-circle fa-fw"></i>
-                    <strong>Conexão bem-sucedida!</strong> Os dados da sua conta foram carregados via API.
+                    <strong>Conexão bem-sucedida!</strong> Os dados da sua conta de vendedor foram carregados via API.
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5><i class="fa-solid fa-user-circle fa-fw"></i> Informações do Vendedor</h5>
-                        <ul class="list-group">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                ID (Seller ID):
-                                <strong><?= esc($seller_info->id ?? 'N/A') ?></strong>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Nickname:
-                                <strong><?= esc($seller_info->nickname ?? 'N/A') ?></strong>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Nome:
-                                <strong><?= esc($seller_info->first_name ?? '') ?> <?= esc($seller_info->last_name ?? '') ?></strong>
-                            </li>
-                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Email:
-                                <strong><?= esc($seller_info->email ?? 'N/A') ?></strong>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Site:
-                                <strong><?= esc($seller_info->site_id ?? 'N/A') ?></strong>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Status da Conta:
-                                <span class="badge bg-success"><?= esc($seller_info->status->site_status ?? 'N/A') ?></span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="col-md-6">
-                         <h5><i class="fa-solid fa-key fa-fw"></i> Status dos Tokens (Banco de Dados)</h5>
-                         <?php if (isset($credentials) && $credentials !== null): ?>
-                            <ul class="list-group">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Access Token:
-                                    <?php if (!empty($credentials->access_token)): ?>
-                                        <span class="badge bg-success">Presente</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger">Ausente</span>
-                                    <?php endif; ?>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Refresh Token:
-                                    <?php if (!empty($credentials->refresh_token)): ?>
-                                        <span class="badge bg-success">Presente</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger">Ausente</span>
-                                    <?php endif; ?>
-                                </li>
-                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Token Atualizado em:
-                                    <strong><?= esc($credentials->token_updated_at ? date('d/m/Y H:i', strtotime($credentials->token_updated_at)) : 'Nunca') ?></strong>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Expira em (segundos):
-                                    <strong><?= esc($credentials->expires_in ?? 'N/A') ?></strong>
-                                </li>
-                            </ul>
-                            <div class="d-grid gap-2 mt-3">
-                                <button type="button" 
-                                   id="forceRefreshButton" 
-                                   class="btn btn-outline-primary" 
-                                   data-url="<?= route_to('cron.refresh-token', 'mR7HAhCdw9JPqylpbSLxWeyC879SoLNw') // USA A CHAVE DO SEU CRONCONTROLLER ?>"
-                                   title="Executa a atualização em segundo plano">
-                                    <i class="fa-solid fa-sync fa-fw"></i>
-                                    Forçar Atualização do Token (Refresh)
-                                </button>
-                                <div class="form-text">
-                                    Use isso se a conexão falhar. A atualização já é automática a cada 6 horas (pelo Cron Job) ou quando o token expira.
-                                </div>
-                            </div>
-                         <?php else: ?>
-                             <div class="alert alert-danger" role="alert">
-                                <strong>Erro Crítico:</strong> Não foi possível carregar as credenciais do banco de dados (tabela `ml_credentials`).
-                             </div>
-                         <?php endif; ?>
-                    </div>
-                </div>
+                <h5><i class="fa-solid fa-user-circle fa-fw"></i> Informações do Vendedor (Mercado Livre)</h5>
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ID (Seller ID):
+                        <strong><?= esc($seller_info->id ?? 'N/A') ?></strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Nickname:
+                        <strong><?= esc($seller_info->nickname ?? 'N/A') ?></strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Nome:
+                        <strong><?= esc($seller_info->first_name ?? '') ?> <?= esc($seller_info->last_name ?? '') ?></strong>
+                    </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Email:
+                        <strong><?= esc($seller_info->email ?? 'N/A') ?></strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Site:
+                        <strong><?= esc($seller_info->site_id ?? 'N/A') ?></strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Status da Conta:
+                        <span class="badge bg-success"><?= esc($seller_info->status->site_status ?? 'N/A') ?></span>
+                    </li>
+                </ul>
 
             <?php else: ?>
                 
@@ -219,15 +169,67 @@
                     <p>Não foi possível carregar os dados da sua conta do Mercado Livre (API `/users/me`).</p>
                     <hr>
                     <p class="mb-0">
-                        <strong>Possíveis Causas:</strong><br>
-                        1. O `access_token` e/ou `refresh_token` no seu banco de dados (tabela `ml_credentials`) estão incorretos ou expiraram.<br>
-                        2. O `client_id` ou `client_secret` no seu arquivo `.env` estão errados (o refresh automático falhou).<br>
-                        3. Você ainda não executou o Seeder: `php spark db:seed MlCredentialsSeeder`
+                        Verifique o status das suas credenciais na aba "Credenciais e Status".
                     </p>
                 </div>
 
             <?php endif; ?>
-
+        </div>
+    </div>
+    
+    <div class="tab-pane fade show active" id="tab-credentials" role="tabpanel" aria-labelledby="credentials-tab" tabindex="0">
+        <div class="p-3 border border-top-0 rounded-bottom">
+            
+            <div id="refresh-alert-placeholder" class="mb-3"></div>
+            
+            <div>
+                    <h5><i class="fa-solid fa-key fa-fw"></i> Status dos Tokens (Banco de Dados)</h5>
+                    <?php if (isset($credentials) && $credentials !== null): ?>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Access Token:
+                            <?php if (!empty($credentials->access_token)): ?>
+                                <span class="badge bg-success">Presente</span>
+                            <?php else: ?>
+                                <span class="badge bg-danger">Ausente</span>
+                            <?php endif; ?>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Refresh Token:
+                            <?php if (!empty($credentials->refresh_token)): ?>
+                                <span class="badge bg-success">Presente</span>
+                            <?php else: ?>
+                                <span class="badge bg-danger">Ausente</span>
+                            <?php endif; ?>
+                        </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Token Atualizado em:
+                            <strong><?= esc($credentials->token_updated_at ? date('d/m/Y H:i', strtotime($credentials->token_updated_at)) : 'Nunca') ?></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Expira em (segundos):
+                            <strong><?= esc($credentials->expires_in ?? 'N/A') ?></strong>
+                        </li>
+                    </ul>
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" 
+                            id="forceRefreshButton" 
+                            class="btn btn-outline-primary" 
+                            data-url="<?= route_to('cron.refresh-token', 'mR7HAhCdw9JPqylpbSLxWeyC879SoLNw') // USA A CHAVE DO SEU CRONCONTROLLER ?>"
+                            title="Executa a atualização em segundo plano">
+                            <i class="fa-solid fa-sync fa-fw"></i>
+                            Forçar Atualização do Token (Refresh)
+                        </button>
+                        <div class="form-text">
+                            Use isso se a conexão falhar. A atualização já é automática a cada 6 horas (pelo Cron Job) ou quando o token expira.
+                        </div>
+                    </div>
+                    <?php else: ?>
+                        <div class="alert alert-danger" role="alert">
+                        <strong>Erro Crítico:</strong> Não foi possível carregar as credenciais do banco de dados (tabela `ml_credentials`).
+                        </div>
+                    <?php endif; ?>
+            </div>
         </div>
     </div>
 
@@ -264,6 +266,7 @@
             const tabToActivate = document.querySelector(`#mlSettingsTabs button[data-bs-target="${activeTabId}"]`);
             if (tabToActivate) {
                 // Usa a API do Bootstrap para mostrar a aba salva, em vez da padrão
+                // (O padrão 'active' é a aba de Credenciais, se nada for salvo)
                 new bootstrap.Tab(tabToActivate).show();
             }
         }
@@ -306,12 +309,14 @@
             const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
             
             if (selected.length === 0) {
-                alert('Por favor, selecione um template para editar.');
+                // MODIFICADO: Usa a nova função showAlert
+                showAlert('Por favor, selecione um template para editar.', 'Atenção');
                 e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return;
             }
             if (selected.length > 1) {
-                alert('Você só pode editar um template por vez.');
+                // MODIFICADO: Usa a nova função showAlert
+                showAlert('Você só pode editar um template por vez.', 'Atenção');
                 e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return;
             }
@@ -321,14 +326,22 @@
             $(this).attr('data-url', editUrl); // Define o URL para o script global pegar
         });
 
-        // 5. Lógica "Excluir Selecionados" para Templates
+        // 5. Lógica "Excluir Selecionados" para Templates (MODIFICADO)
         $('#batchDeleteTemplatesForm').on('submit', function(e) {
+            e.preventDefault(); // Impede o envio imediato
+            const form = $(this);
             const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
+            
             if (selected.length === 0) {
-                alert('Por favor, selecione pelo menos um template para excluir.');
-                e.preventDefault();
+                showAlert('Por favor, selecione pelo menos um template para excluir.', 'Atenção');
                 return false;
             }
+            
+            // Se a validação passar, mostra o modal de confirmação
+            const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> templates selecionados?<br><br><small>O Template Padrão (ID 1) não pode ser excluído e será ignorado.</small>';
+            showConfirm(msg, 'Confirmar Exclusão', function() {
+                form.get(0).submit(); // Envia o formulário de verdade
+            });
         });
 
         // --- INÍCIO DO SCRIPT ATUALIZADO PARA O BOTÃO REFRESH (COM ALERTA BOOTSTRAP) ---

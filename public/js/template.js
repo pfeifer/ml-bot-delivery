@@ -82,8 +82,10 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn('Bootstrap Tooltip component not found.');
             return;
         }
-        // Seleciona todos os elementos elegíveis para tooltip na sidebar
-        const tooltipTriggerList = sidebar ? sidebar.querySelectorAll('.nav-pills .nav-link, .logout-link, #dropdownUser') : []; // Removido #sidebarToggle daqui
+        
+        // MODIFICADO: Seleciona tooltips da sidebar E da navbar
+        const tooltipTriggerListSidebar = sidebar ? sidebar.querySelectorAll('.nav-pills .nav-link, .logout-link, #dropdownUser') : [];
+        const tooltipTriggerListNavbar = document.querySelectorAll('#dropdownUser, #themeSwitch'); // Adiciona os novos itens da navbar
         
         // Seleciona o botão de toggle separadamente
         const toggleButtonTooltip = document.getElementById('sidebarToggle');
@@ -106,10 +108,17 @@ document.addEventListener('DOMContentLoaded', function () {
             tooltipInstances.push(new bootstrap.Tooltip(toggleButtonTooltip));
         }
 
+        // Tooltips da Navbar (Perfil e Tema) - Sempre ativos
+        tooltipTriggerListNavbar.forEach(tooltipTriggerEl => {
+            if (tooltipTriggerEl.hasAttribute('data-bs-title') || tooltipTriggerEl.hasAttribute('title')) {
+                tooltipInstances.push(new bootstrap.Tooltip(tooltipTriggerEl));
+            }
+        });
+
 
         if (sidebar && sidebar.classList.contains('collapsed')) {
             // Sidebar Colapsada: Ativa tooltips (dos links da sidebar)
-            tooltipTriggerList.forEach(tooltipTriggerEl => {
+            tooltipTriggerListSidebar.forEach(tooltipTriggerEl => {
                 let titleText = '';
                 // Tenta pegar o texto de dentro do elemento (span)
                 const textElement = tooltipTriggerEl.querySelector('span:not(.toggle-text)');
@@ -118,15 +127,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 
                 // Casos especiais ou fallback para atributos
-                // (Removida a lógica do #sidebarToggle daqui)
-                if (tooltipTriggerEl.id === 'dropdownUser' && !titleText) {
-                    // Fallback específico para o dropdown do usuário
-                    titleText = tooltipTriggerEl.getAttribute('data-bs-title') || 'Opções do Usuário';
-                } else if (!titleText && tooltipTriggerEl.hasAttribute('data-bs-title')) {
+                if (!titleText && tooltipTriggerEl.hasAttribute('data-bs-title')) {
                     titleText = tooltipTriggerEl.getAttribute('data-bs-title');
                 } else if (!titleText && tooltipTriggerEl.hasAttribute('title')) { // Fallback para title nativo
                     titleText = tooltipTriggerEl.getAttribute('title');
                 }
+                
                 if (titleText) {
                     // Define os atributos necessários para o Bootstrap Tooltip
                     tooltipTriggerEl.setAttribute('data-bs-toggle', 'tooltip');
@@ -142,10 +148,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         } else {
-            // Sidebar Expandida: Desativa a maioria dos tooltips
-            tooltipTriggerList.forEach(tooltipTriggerEl => {
-                // MANTÉM tooltip para o #dropdownUser
-                const keepTooltip = (tooltipTriggerEl.id === 'dropdownUser'); // Removido #sidebarToggle
+            // Sidebar Expandida: Desativa a maioria dos tooltips DA SIDEBAR
+            tooltipTriggerListSidebar.forEach(tooltipTriggerEl => {
+                // MANTÉM tooltip para o #dropdownUser se ele AINDA ESTIVER na sidebar (não está mais, mas seguro)
+                const keepTooltip = (tooltipTriggerEl.id === 'dropdownUser');
 
                 const tooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
                 if (tooltip && !keepTooltip) {
@@ -169,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(initializeTooltips, 100);
     // --- Fim da Lógica dos Tooltips ---
 });
+
 // --- Script do Seletor de Tema (Switch) ---
 (() => {
     'use strict'
@@ -176,8 +183,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const themeSwitch = document.getElementById('themeSwitch');
     // Seleciona o ícone pela classe .theme-icon
     const themeIcon = document.querySelector('.theme-switcher-label i.theme-icon');
-    const themeText = document.querySelector('.theme-switcher-label span.theme-switcher-text');
-    const themeContainer = document.querySelector('.theme-switcher-container');
+    
+    // MODIFICADO: Removido 'themeText'
+    // const themeText = document.querySelector('.theme-switcher-label span.theme-switcher-text');
+    
+    // MODIFICADO: Seletor atualizado para navbar OU sidebar
+    const themeContainer = document.querySelector('.theme-switcher-container-navbar') || document.querySelector('.theme-switcher-container');
+    
     // Função para obter o tema preferido (armazenado ou do sistema)
     const getPreferredTheme = () => {
         if (storedTheme) {
@@ -194,8 +206,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         // Define o atributo data-bs-theme no HTML root
         document.documentElement.setAttribute('data-bs-theme', theme);
-        // Atualiza a interface do switch (ícone e texto) apenas se os elementos existirem
-        if (themeSwitch && themeIcon && themeText) {
+        
+        // MODIFICADO: Atualiza a interface do switch (ícone) - removido themeText
+        if (themeSwitch && themeIcon) {
             // Remove sempre as classes de ícone anteriores para evitar conflito
             themeIcon.classList.remove('fa-sun', 'fa-moon');
 
@@ -203,12 +216,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 themeSwitch.checked = true;
                 // Adiciona Lua (FA)
                 themeIcon.classList.add('fa-moon');
-                themeText.textContent = 'Modo Escuro';
+                // MODIFICADO: Removido 'themeText.textContent'
             } else { // theme === 'light'
                 themeSwitch.checked = false;
                 // Adiciona Sol (FA)
                 themeIcon.classList.add('fa-sun');
-                themeText.textContent = 'Modo Claro';
+                 // MODIFICADO: Removido 'themeText.textContent'
             }
             // Garante que 'fa-solid' esteja sempre presente (se não estiver fixo no HTML)
             if (!themeIcon.classList.contains('fa-solid')) {
@@ -236,8 +249,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Adiciona evento de clique ao container do switch para ativar o input
     if (themeContainer && themeSwitch) {
         themeContainer.addEventListener('click', (e) => {
-            // Previne o evento duplo se o clique for diretamente no input
-            if (e.target !== themeSwitch) {
+            // Previne o evento duplo se o clique for diretamente no input ou no label
+            if (e.target !== themeSwitch && e.target.tagName.toLowerCase() !== 'label') {
                 e.preventDefault();
                 themeSwitch.click(); // Simula o clique no input
             }

@@ -27,8 +27,7 @@
             Editar Selecionado
         </button>
         
-        <button type="submit" class="btn btn-outline-danger" id="deleteSelectedBtn" 
-                onclick="return confirm('Tem certeza que deseja excluir os produtos selecionados?');">
+        <button type="submit" class="btn btn-outline-danger" id="deleteSelectedBtn">
             <i class="fa-solid fa-trash fa-fw"></i>
             Excluir Selecionados
         </button>
@@ -123,12 +122,14 @@
             const selected = productsTable.rows().nodes().to$().find('.row-checkbox:checked');
             
             if (selected.length === 0) {
-                alert('Por favor, selecione um produto para editar.');
+                // MODIFICADO: Usa a nova função showAlert
+                showAlert('Por favor, selecione um produto para editar.', 'Atenção');
                 e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return false;
             }
             if (selected.length > 1) {
-                alert('Você só pode editar um produto por vez.');
+                // MODIFICADO: Usa a nova função showAlert
+                showAlert('Você só pode editar um produto por vez.', 'Atenção');
                 e.stopImmediatePropagation(); // Impede o 'click' (e o modal) de disparar
                 return false;
             }
@@ -139,14 +140,22 @@
             $(this).attr('data-url', editUrl); 
         });
 
-        // 5. Lógica do botão "Excluir Selecionados" (sem alteração)
+        // 5. Lógica do botão "Excluir Selecionados" (MODIFICADO)
         $('#batchDeleteForm').on('submit', function(e) {
+            e.preventDefault(); // Impede o envio imediato
+            const form = $(this);
             const selected = productsTable.rows().nodes().to$().find('.row-checkbox:checked');
+            
             if (selected.length === 0) {
-                alert('Por favor, selecione pelo menos um produto para excluir.');
-                e.preventDefault(); 
+                showAlert('Por favor, selecione pelo menos um produto para excluir.', 'Atenção');
                 return false;
             }
+            
+            // Se a validação passar, mostra o modal de confirmação
+            const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> produtos selecionados?';
+            showConfirm(msg, 'Confirmar Exclusão', function() {
+                form.get(0).submit(); // Envia o formulário de verdade
+            });
         });
     });
 </script>
