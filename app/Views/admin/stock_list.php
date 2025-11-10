@@ -4,27 +4,26 @@
 
 <?= $this->section('page_title') ?>Códigos de Estoque Cadastrados<?= $this->endSection() ?>
 
+<?= $this->section('page_actions') ?>
+    <a href="<?= route_to('admin.stock.new') ?>" 
+       class="btn btn-success"
+       data-bs-toggle="ajax-modal"
+       data-title="Adicionar ao Estoque"
+       data-modal-size="modal-lg">
+        <i class="fa-solid fa-plus fa-fw"></i>
+        Adicionar ao Estoque
+    </a>
+    
+    <button type="submit" class="btn btn-outline-danger" id="deleteSelectedStockBtn" form="batchDeleteStockForm">
+        <i class="fa-solid fa-trash fa-fw"></i>
+        Excluir Selecionados
+    </button>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
 
 <form method="POST" action="<?= route_to('admin.stock.delete.batch') ?>" id="batchDeleteStockForm">
     <?= csrf_field() ?>
     
-    <div class="mb-3">
-        <a href="<?= route_to('admin.stock.new') ?>" 
-           class="btn btn-success"
-           data-bs-toggle="ajax-modal"
-           data-title="Adicionar ao Estoque"
-           data-modal-size="modal-lg">
-            <i class="fa-solid fa-plus fa-fw"></i>
-            Adicionar ao Estoque
-        </a>
-        
-        <button type="submit" class="btn btn-outline-danger" id="deleteSelectedStockBtn">
-            <i class="fa-solid fa-trash fa-fw"></i>
-            Excluir Selecionados
-        </button>
-    </div>
-
     <div class="alert alert-info" role="alert">
         <i class="fa-solid fa-circle-info fa-fw"></i>
         Por segurança, os códigos em si não são exibidos. Apenas códigos <strong>Disponíveis</strong> podem ser selecionados e excluídos.
@@ -86,7 +85,8 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    $(document).ready(function () {
+    (function($) { // Wrapper para garantir que o $ (jQuery) esteja pronto
+        
         // Define o objeto de linguagem PT-BR
         const dataTableLangPtBr = {
             "emptyTable": "Nenhum registro encontrado", "info": "Mostrando de _START_ até _END_ de _TOTAL_ registros", "infoEmpty": "Mostrando 0 até 0 de 0 registros", "infoFiltered": "(Filtrados de _MAX_ registros)", "infoThousands": ".", "loadingRecords": "Carregando...", "processing": "Processando...", "zeroRecords": "Nenhum registro encontrado", "search": "Pesquisar:",
@@ -95,20 +95,27 @@
         };
 
         // 1. Inicializa o DataTables
-        const stockTable = new DataTable('#stockTable', {
-            "columnDefs": [
-                {
-                    "targets": 0, // A primeira coluna (checkbox)
-                    "orderable": false,
-                    "searchable": false
-                }
-            ],
-            "language": dataTableLangPtBr, // <-- CORREÇÃO APLICADA
-            "order": [[ 1, "desc" ]] // Ordenar por ID (coluna 1) por padrão
-        });
+        var stockTable = null;
+        if ($.fn.DataTable.isDataTable('#stockTable')) {
+            stockTable = $('#stockTable').DataTable();
+            stockTable.columns.adjust().draw();
+        } else if ($('#stockTable').length > 0) {
+            stockTable = new DataTable('#stockTable', {
+                "columnDefs": [
+                    {
+                        "targets": 0, // A primeira coluna (checkbox)
+                        "orderable": false,
+                        "searchable": false
+                    }
+                ],
+                "language": dataTableLangPtBr, // <-- CORREÇÃO APLICADA
+                "order": [[ 1, "desc" ]] // Ordenar por ID (coluna 1) por padrão
+            });
+        }
 
         // 2. Lógica do "Selecionar Todos"
         $('#selectAllStock').on('click', function () {
+            if (!stockTable) return;
             const isChecked = $(this).prop('checked');
             // Seleciona todos os checkboxes na tabela (exceto os desabilitados)
             stockTable.rows().nodes().to$().find('.row-checkbox-stock:not(:disabled)').prop('checked', isChecked);
@@ -121,9 +128,19 @@
             }
         });
 
-        // 4. Lógica do botão "Excluir Selecionados" (MODIFICADO PARA AJAX)
-        $('#batchDeleteStockForm').on('submit', function(e) {
+        // =================================================================
+        // INÍCIO DA CORREÇÃO: Adicionado .off() para limpar listeners antigos
+        // =================================================================
+
+        // 4. Lógica do botão "Excluir Selecionados"
+        $(document).off('submit', '#batchDeleteStockForm').on('submit', '#batchDeleteStockForm', function(e) {
             e.preventDefault(); // Impede o envio imediato
+            
+            if (!stockTable) {
+                showAlert('Por favor, selecione pelo menos um código disponível para excluir.', 'Atenção');
+                return false;
+            }
+            
             const form = $(this); // Pega o formulário
             const selected = stockTable.rows().nodes().to$().find('.row-checkbox-stock:checked');
             
@@ -135,41 +152,47 @@
             const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> códigos selecionados?<br><br><small>APENAS códigos disponíveis (não vendidos) serão excluídos.</small>';
             
             showConfirm(msg, 'Confirmar Exclusão', function() {
-                // --- INÍCIO DA LÓGICA AJAX ---
-                var $contentContainer = $('main.content');
-                var $pageTitle = $('h1.mb-4');
-                $pageTitle.text('Excluindo...');
-                $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                // Mostra spinner no local
+                $('#page-content-container').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                $('#alert-container').empty(); // Limpa alertas antigos
 
                 $.ajax({
                     url: form.attr('action'),
                     type: 'POST',
                     data: form.serialize(),
-                    dataType: 'html', // Espera o HTML da página redirecionada
+                    dataType: 'html', 
                     
                     success: function(responseHtml) {
                         try {
                             var $newHtml = $('<div>').html(responseHtml);
-                            var newTitle = $newHtml.find('h1.mb-4').html();
-                            var newContent = $newHtml.find('main.content').html();
+                            
+                            // Extrai os novos blocos
+                            var newAlerts = $newHtml.find('#alert-container').html();
+                            var newPageContent = $newHtml.find('#page-content-container').html();
                             var newScripts = $newHtml.find('#ajax-scripts').html();
                             var newPageTitle = $newHtml.find('title').text();
+                            var newH1Title = $newHtml.find('#page-title-h1').html();
+                            var newPageActions = $newHtml.find('#page-action-buttons').html();
 
-                            if (newContent) {
-                                $pageTitle.html(newTitle);
-                                $contentContainer.html(newContent);
+                            if (newPageContent !== undefined && newAlerts !== undefined) {
+                                // Substitui apenas os blocos
+                                $('#alert-container').html(newAlerts);
+                                $('#page-content-container').html(newPageContent);
+
+                                // ATUALIZA TÍTULO E BOTÕES
+                                if (newH1Title) $('#page-title-h1').html(newH1Title);
+                                if (newPageActions) $('#page-action-buttons').html(newPageActions);
                                 if (newPageTitle) document.title = newPageTitle;
                                 
-                                $('#ajax-scripts-container').remove();
-                                if (newScripts) {
-                                    var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
-                                    $('body').append($scriptContainer);
-                                }
-                                $contentContainer.scrollTop(0);
+                                // Recarrega os scripts
+                                $('#ajax-scripts-container').empty().html(newScripts ? '<div id="ajax-scripts">' + newScripts + '</div>' : '');
+                                
+                                $('#main-content-wrapper').scrollTop(0);
                             } else {
                                 location.reload(); // Fallback
                             }
                         } catch(e) {
+                            console.error("Erro ao processar recarga AJAX (delete stock):", e);
                             location.reload(); // Fallback
                         }
                     },
@@ -177,23 +200,24 @@
                         location.reload(); // Fallback em caso de erro
                     }
                 });
-                // --- FIM DA LÓGICA AJAX ---
             });
         });
-    });
+        
+        // =================================================================
+        // FIM DA CORREÇÃO
+        // =================================================================
+        
+    })(jQuery); // Fim do IIFE
 
     /**
-     * ADICIONADO: Função global que o template.js procura
-     * para inicializar scripts dentro de um modal recém-carregado.
+     * Função global para scripts do modal (inalterada)
      */
     window.initModalScripts = function($modalBody) {
         
-        // Encontra os elementos *dentro* do corpo do modal
         const productSelect = $modalBody.find('#product_id_modal').get(0);
         const expiresAtField = $modalBody.find('#expires_at_field_modal').get(0);
         const expiresAtInput = $modalBody.find('#expires_at_modal').get(0);
 
-        // Se não encontrar os elementos (ex: abriu o modal de "Editar Produto"), não faz nada
         if (!productSelect || !expiresAtField || !expiresAtInput) {
             return;
         }
@@ -203,15 +227,13 @@
             const productType = selectedOption ? selectedOption.getAttribute('data-type') : null;
 
             if (productType === 'code') {
-                expiresAtField.style.display = 'block'; // Mostra o campo
+                expiresAtField.style.display = 'block'; 
             } else {
-                expiresAtField.style.display = 'none'; // Esconde o campo
-                expiresAtInput.value = ''; // Limpa o valor se não for código único
+                expiresAtField.style.display = 'none'; 
+                expiresAtInput.value = ''; 
             }
         }
-        // Verifica no carregamento do modal
         checkProductType();
-        // Adiciona listener para mudanças no select
         productSelect.addEventListener('change', checkProductType);
     }
 </script>

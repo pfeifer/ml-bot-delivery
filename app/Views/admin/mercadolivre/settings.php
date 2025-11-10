@@ -40,33 +40,33 @@
             
             <p>Gerencie os templates de mensagem. O "Template Padrão (ID #1)" será usado se nenhum for especificado no cadastro do produto.</p>
 
+            <div class="mb-3" id="page-action-buttons-templates">
+                <a href="<?= route_to('admin.message_templates.new') ?>" 
+                   class="btn btn-success"
+                   data-bs-toggle="ajax-modal"
+                   data-title="Adicionar Novo Template"
+                   data-modal-size="modal-lg">
+                    <i class="fa-solid fa-plus fa-fw"></i>
+                    Adicionar Novo Template
+                </a>
+                
+                <button type="button" class="btn btn-outline-primary" 
+                        id="editSelectedTemplateBtnModal"
+                        data-bs-toggle="ajax-modal"
+                        data-title="Editar Template"
+                        data-modal-size="modal-lg">
+                    <i class="fa-solid fa-pencil fa-fw"></i>
+                    Editar Selecionado
+                </button>
+                
+                <button type="submit" class="btn btn-outline-danger" id="deleteSelectedTemplateBtn" form="batchDeleteTemplatesForm">
+                    <i class="fa-solid fa-trash fa-fw"></i>
+                    Excluir Selecionados
+                </button>
+            </div>
+
             <form method="POST" action="<?= route_to('admin.message_templates.delete.batch') ?>" id="batchDeleteTemplatesForm">
                 <?= csrf_field() ?>
-
-                <div class="mb-3">
-                    <a href="<?= route_to('admin.message_templates.new') ?>" 
-                       class="btn btn-success"
-                       data-bs-toggle="ajax-modal"
-                       data-title="Adicionar Novo Template"
-                       data-modal-size="modal-lg">
-                        <i class="fa-solid fa-plus fa-fw"></i>
-                        Adicionar Novo Template
-                    </a>
-                    
-                    <button type="button" class="btn btn-outline-primary" 
-                            id="editSelectedTemplateBtnModal"
-                            data-bs-toggle="ajax-modal"
-                            data-title="Editar Template"
-                            data-modal-size="modal-lg">
-                        <i class="fa-solid fa-pencil fa-fw"></i>
-                        Editar Selecionado
-                    </button>
-                    
-                    <button type="submit" class="btn btn-outline-danger" id="deleteSelectedTemplateBtn">
-                        <i class="fa-solid fa-trash fa-fw"></i>
-                        Excluir Selecionados
-                    </button>
-                </div>
 
                 <?php if (!empty($templates) && is_array($templates)): ?>
                     <div class="table-responsive">
@@ -176,7 +176,6 @@
             <?php endif; ?>
         </div>
     </div>
-    
     <div class="tab-pane fade show active" id="tab-credentials" role="tabpanel" aria-labelledby="credentials-tab" tabindex="0">
         <div class="p-3 border border-top-0 rounded-bottom">
             
@@ -232,7 +231,6 @@
             </div>
         </div>
     </div>
-
     <div class="tab-pane fade" id="tab-other" role="tabpanel" aria-labelledby="other-tab" tabindex="0">
         <div class="p-3 border border-top-0 rounded-bottom">
             <h4>Outras Configurações</h4>
@@ -263,25 +261,16 @@
         // 2. No carregamento (ou recarregamento AJAX), verifica se há uma aba salva
         const activeTabId = localStorage.getItem(storageKey);
         
-        // =================================================================
-        // INÍCIO DA CORREÇÃO: Adicionado setTimeout
-        // =================================================================
         // Adia a execução para o próximo "tick" do navegador.
-        // Isso garante que o Bootstrap JS tenha inicializado os componentes
-        // antes de tentarmos chamar o método .show() neles.
         setTimeout(function() {
             if (activeTabId) {
                 const tabToActivate = document.querySelector(`#mlSettingsTabs button[data-bs-target="${activeTabId}"]`);
                 if (tabToActivate) {
-                    // Verifica se o componente Tab já foi instanciado, ou cria um novo
                     const tabInstance = bootstrap.Tab.getInstance(tabToActivate) || new bootstrap.Tab(tabToActivate);
                     tabInstance.show();
                 }
             }
         }, 10); // 10ms é o suficiente.
-        // =================================================================
-        // FIM DA CORREÇÃO
-        // =================================================================
     })();
 
     // =================================================================
@@ -316,7 +305,7 @@
             if ($.fn.DataTable.isDataTable('#templatesTable')) {
                 templatesTable = $('#templatesTable').DataTable();
                 templatesTable.columns.adjust().draw();
-            } else if (!templatesTable) { // Só inicializa UMA VEZ
+            } else if (!templatesTable && $('#templatesTable').length > 0) { // Só inicializa UMA VEZ
                 templatesTable = new DataTable('#templatesTable', {
                     "columnDefs": [
                         {
@@ -344,21 +333,27 @@
             initTemplatesTable();
         }
 
-        // --- Lógica dos Botões (sem alterações) ---
+        // =================================================================
+        // INÍCIO DA CORREÇÃO: Adicionado .off() para limpar listeners antigos
+        // =================================================================
 
-        $('#selectAllTemplates').on('click', function () {
+        // --- Lógica dos Botões (os botões de ação estão DENTRO da aba) ---
+        // Usamos delegação de eventos, pois os botões são recarregados com o conteúdo
+        
+        $(document).off('click', '#selectAllTemplates').on('click', '#selectAllTemplates', function () {
             if (!templatesTable) return; 
             const isChecked = $(this).prop('checked');
             templatesTable.rows().nodes().to$().find('.row-checkbox-template:not(:disabled)').prop('checked', isChecked);
         });
 
+        // Este listener está no tbody, que é recarregado, por isso não precisa de .off()
         $('#templatesTable tbody').on('change', '.row-checkbox-template', function () {
             if (!$(this).prop('checked')) {
                 $('#selectAllTemplates').prop('checked', false);
             }
         });
 
-        $('#editSelectedTemplateBtnModal').on('mousedown', function(e) {
+        $(document).off('mousedown', '#editSelectedTemplateBtnModal').on('mousedown', '#editSelectedTemplateBtnModal', function(e) {
             if (!templatesTable) { 
                 showAlert('Por favor, clique na aba "Templates de Mensagem" primeiro para carregar a tabela.', 'Atenção');
                 e.stopImmediatePropagation(); 
@@ -383,7 +378,8 @@
             $(this).attr('data-url', editUrl);
         });
 
-        $('#batchDeleteTemplatesForm').on('submit', function(e) {
+        // 'deleteBatch' usa a lógica de recarga parcial
+        $(document).off('submit', '#batchDeleteTemplatesForm').on('submit', '#batchDeleteTemplatesForm', function(e) {
             e.preventDefault(); 
             
             if (!templatesTable) { 
@@ -402,10 +398,9 @@
             const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> templates selecionados?<br><br><small>O Template Padrão (ID 1) não pode ser excluído e será ignorado.</small>';
             
             showConfirm(msg, 'Confirmar Exclusão', function() {
-                var $contentContainer = $('main.content');
-                var $pageTitle = $('h1.mb-4');
-                $pageTitle.text('Excluindo...');
-                $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                // Mostra spinner no local
+                $('#page-content-container').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                $('#alert-container').empty(); // Limpa alertas antigos
 
                 $.ajax({
                     url: form.attr('action'),
@@ -416,26 +411,36 @@
                     success: function(responseHtml) {
                         try {
                             var $newHtml = $('<div>').html(responseHtml);
-                            var newTitle = $newHtml.find('h1.mb-4').html();
-                            var newContent = $newHtml.find('main.content').html();
+                            
+                            // 1. Extrai o NOVO conteúdo dos alertas
+                            var newAlerts = $newHtml.find('#alert-container').html();
+                            // 2. Extrai o NOVO conteúdo da página
+                            var newPageContent = $newHtml.find('#page-content-container').html();
+                            // 3. Extrai os NOVOS scripts
                             var newScripts = $newHtml.find('#ajax-scripts').html();
+                            
+                            // 4. Extrai o Título da Aba
                             var newPageTitle = $newHtml.find('title').text();
-
-                            if (newContent) {
-                                $pageTitle.html(newTitle);
-                                $contentContainer.html(newContent);
+                            var newH1Title = $newHtml.find('#page-title-h1').html();
+                            
+                            if (newPageContent !== undefined && newAlerts !== undefined) {
+                                // 5. Substitui APENAS os contêineres
+                                $('#alert-container').html(newAlerts);
+                                $('#page-content-container').html(newPageContent);
+                                
+                                // 6. Atualiza o Título H1 (estático)
+                                if (newH1Title) $('#page-title-h1').html(newH1Title);
                                 if (newPageTitle) document.title = newPageTitle;
                                 
-                                $('#ajax-scripts-container').remove();
-                                if (newScripts) {
-                                    var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
-                                    $('body').append($scriptContainer);
-                                }
-                                $contentContainer.scrollTop(0);
+                                // 7. Recarrega os scripts da página
+                                $('#ajax-scripts-container').empty().html(newScripts ? '<div id="ajax-scripts">' + newScripts + '</div>' : '');
+                                
+                                $('#main-content-wrapper').scrollTop(0);
                             } else {
                                 location.reload(); // Fallback
                             }
                         } catch(e) {
+                            console.error("Erro ao processar recarga AJAX (delete tpl):", e);
                             location.reload(); // Fallback
                         }
                     },
@@ -446,7 +451,8 @@
             });
         });
 
-        $('#forceRefreshButton').on('click', function(e) {
+        // --- SCRIPT DO BOTÃO REFRESH ---
+        $(document).off('click', '#forceRefreshButton').on('click', '#forceRefreshButton', function(e) {
             e.preventDefault();
             var $button = $(this);
             var originalHtml = $button.html();
@@ -471,7 +477,13 @@
                     $alertPlaceholder.html(createAlert(successMsg, 'success'));
                     
                     setTimeout(function() {
-                        location.reload();
+                        // Faz um reload parcial da aba atual, em vez da página inteira
+                        let $activeLink = $('#adminSidebar a.nav-link.active');
+                        if ($activeLink.length > 0) {
+                            $activeLink.click();
+                        } else {
+                            location.reload();
+                        }
                     }, 3000);
                 })
                 .fail(function(jqXHR) {
@@ -481,6 +493,11 @@
                     $button.prop('disabled', false).html(originalHtml);
                 });
         });
+
+        // =================================================================
+        // FIM DA CORREÇÃO
+        // =================================================================
+
     })(jQuery); // Fim do IIFE do jQuery
 
 </script>

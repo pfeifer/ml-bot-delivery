@@ -70,8 +70,8 @@
                 </a>
             </li>
         </ul>
-
-        </nav>
+    </nav>
+    
     <div class="main-content">
         <nav class="navbar navbar-expand navbar-light bg-body-tertiary">
             <div class="container-fluid align-items-center">
@@ -121,66 +121,76 @@
                         </ul>
                     </div>
                 </div>
-                </div>
+            </div>
         </nav>
-        <main class="content p-4"> 
-            <h1 class="mb-4"><?= $this->renderSection('page_title') ?></h1>
+        
+        <div class="p-4 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h1 class="mb-3" id="page-title-h1"><?= $this->renderSection('page_title') ?></h1>
             
-            <?php // Flashdata (Sucesso, Erro, Info) ?>
-            <?php if (session()->getFlashdata('success')): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fa-solid fa-check-circle fa-fw me-2"></i>
-                    <?= session()->getFlashdata('success') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
-            <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fa-solid fa-triangle-exclamation fa-fw me-2"></i>
-                    <?= session()->getFlashdata('error') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
-            <?php if (session()->getFlashdata('info')): ?>
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="fa-solid fa-circle-info fa-fw me-2"></i>
-                    <?= session()->getFlashdata('info') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
+            <div class="mb-3" id="page-action-buttons">
+                <?= $this->renderSection('page_actions') ?>
+            </div>
+        </div>
 
-             <?php // Erros de Validação (vindos de redirect com ->with('errors'))
-                $validationErrors = session()->getFlashdata('errors');
-                if (!empty($validationErrors) && is_array($validationErrors)): ?>
-                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                      <h5 class="alert-heading"><i class="fa-solid fa-circle-exclamation fa-fw me-2"></i>Erro de Validação</h5>
-                      <p>Por favor, corrija os problemas abaixo:</p>
-                     <ul>
-                         <?php foreach ($validationErrors as $error): ?>
-                             <li><?= esc($error) ?></li>
-                         <?php endforeach ?>
-                     </ul>
-                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                 </div>
-             <?php endif; ?>
+        <main class="content p-4 pt-0" id="main-content-wrapper"> 
+            
+            <div id="alert-container">
+                <?php // Flashdata (Sucesso, Erro, Info) ?>
+                <?php if (session()->getFlashdata('success')): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fa-solid fa-check-circle fa-fw me-2"></i>
+                        <?= session()->getFlashdata('success') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation fa-fw me-2"></i>
+                        <?= session()->getFlashdata('error') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('info')): ?>
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fa-solid fa-circle-info fa-fw me-2"></i>
+                        <?= session()->getFlashdata('info') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
 
-            <?= $this->renderSection('content') ?>
+                 <?php // Erros de Validação (vindos de redirect com ->with('errors'))
+                    $validationErrors = session()->getFlashdata('errors');
+                    if (!empty($validationErrors) && is_array($validationErrors)): ?>
+                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                          <h5 class="alert-heading"><i class="fa-solid fa-circle-exclamation fa-fw me-2"></i>Erro de Validação</h5>
+                          <p>Por favor, corrija os problemas abaixo:</p>
+                         <ul>
+                             <?php foreach ($validationErrors as $error): ?>
+                                 <li><?= esc($error) ?></li>
+                             <?php endforeach ?>
+                         </ul>
+                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                     </div>
+                 <?php endif; ?>
+            </div>
+            
+            <div id="page-content-container">
+                <?= $this->renderSection('content') ?>
+            </div>
+
         </main>
-    </div>
+        </div>
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
-
     <script src="<?= base_url('js/template.js') ?>"></script>
     
-    <div id="ajax-scripts">
-        <?= $this->renderSection('scripts') ?>
+    <div id="ajax-scripts-container">
+        <div id="ajax-scripts">
+            <?= $this->renderSection('scripts') ?>
+        </div>
     </div>
 
     <div class="modal fade" id="ajaxModal" tabindex="-1" aria-labelledby="ajaxModalLabel" aria-hidden="true">
@@ -199,7 +209,6 @@
             </div>
         </div>
     </div>
-    
     <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -216,7 +225,6 @@
         </div>
       </div>
     </div>
-    
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -237,15 +245,9 @@
 
     
     <script>
-    // Variáveis globais para instâncias dos modais
+    // Funções globais de Alerta e Confirmação (inalteradas)
     var alertModalInstance = null;
     var confirmModalInstance = null;
-    
-    /**
-     * Função para exibir um alerta Bootstrap 5
-     * @param {string} message A mensagem a ser exibida
-     * @param {string} [title='Atenção'] O título opcional do modal
-     */
     function showAlert(message, title = 'Atenção') {
         if (!alertModalInstance) {
              const alertModalElement = document.getElementById('alertModal');
@@ -257,21 +259,10 @@
                  return;
              }
         }
-        
-        // Define o título e o corpo
         document.getElementById('alertModalLabel').textContent = title;
         document.getElementById('alertModalBody').innerHTML = message.replace(/\n/g, '<br>');
-        
-        // Exibe o modal
         alertModalInstance.show();
     }
-    
-    /**
-     * Função para exibir um modal de confirmação Bootstrap 5
-     * @param {string} message A mensagem a ser exibida
-     * @param {string} [title='Confirmar Ação'] O título opcional do modal
-     * @param {function} onConfirm O callback a ser executado se o usuário confirmar
-     */
     function showConfirm(message, title = 'Confirmar Ação', onConfirm) {
         if (!confirmModalInstance) {
              const confirmModalElement = document.getElementById('confirmModal');
@@ -285,28 +276,20 @@
                  return;
              }
         }
-        
         document.getElementById('confirmModalLabel').textContent = title;
         document.getElementById('confirmModalBody').innerHTML = message.replace(/\n/g, '<br>');
-        
-        // Pega o botão de confirmar
         const confirmBtn = document.getElementById('confirmModalConfirmBtn');
-        
-        // Limpa handlers de clique anteriores e anexa o novo
-        // Usamos .one() do jQuery para garantir que o clique só seja registrado uma vez
         $(confirmBtn).off('click').one('click', function() {
             if(typeof onConfirm === 'function') {
                 onConfirm();
             }
             confirmModalInstance.hide();
         });
-        
         confirmModalInstance.show();
     }
     
     
     document.addEventListener('DOMContentLoaded', function() {
-        // Verifica se o jQuery está carregado
         if (typeof jQuery === 'undefined') {
             console.error('jQuery não está carregado. Os modais AJAX foram desabilitados.');
             return;
@@ -314,49 +297,36 @@
 
         (function($) { // Wrapper do jQuery
             
-            // Instância reutilizável do Modal Bootstrap (AJAX)
+            // Instâncias do Modal (inalterado)
             var ajaxModalElement = document.getElementById('ajaxModal');
-            if (!ajaxModalElement) return; // Sai se o modal não existir
-            
+            if (!ajaxModalElement) return;
             var ajaxModal = new bootstrap.Modal(ajaxModalElement);
             var $modalBody = $('#ajaxModal .modal-body');
             var $modalTitle = $('#ajaxModal .modal-title');
-            var $modalDialog = $('#ajaxModal .modal-dialog'); // Para controlar o tamanho
+            var $modalDialog = $('#ajaxModal .modal-dialog'); 
 
-            // 1. Lógica para ABRIR o modal
-            // Escuta cliques em qualquer link ou botão com o atributo data-bs-toggle="ajax-modal"
+            // 1. Lógica para ABRIR o modal (inalterado)
             $(document).on('click', '[data-bs-toggle="ajax-modal"]', function(e) {
                 e.preventDefault();
-                
                 var $trigger = $(this);
                 var url = $trigger.attr('href') || $trigger.data('url');
                 var title = $trigger.data('title') || 'Formulário';
-                var modalSize = $trigger.data('modal-size') || 'modal-lg'; // Padrão 'modal-lg'
+                var modalSize = $trigger.data('modal-size') || 'modal-lg'; 
 
                 if (!url) {
                     console.error('Nenhum URL fornecido para o modal AJAX.');
                     return;
                 }
-
-                // Ajusta o tamanho do modal
                 $modalDialog.removeClass('modal-sm modal-lg modal-xl').addClass(modalSize);
-
-                // Limpa o modal e mostra o spinner
                 $modalTitle.text(title);
                 $modalBody.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
                 ajaxModal.show();
 
-                // Faz a requisição AJAX para buscar o conteúdo do formulário
                 $.get(url, function(responseHtml) {
-                    // O backend deve retornar SÓ o HTML do formulário
                     $modalBody.html(responseHtml);
-
-                    // Re-inicializa scripts específicos do modal, se houver
-                    // (Ex: o script de data de validade no formulário de estoque)
                     if (typeof window.initModalScripts === 'function') {
                         window.initModalScripts($modalBody);
                     }
-
                 }).fail(function(jqXHR) {
                      if (jqXHR.status === 404) {
                          $modalBody.html('<div class="alert alert-danger">Erro 404: Recurso não encontrado.</div>');
@@ -368,7 +338,7 @@
 
             // 2. Lógica para SUBMETER o formulário dentro do modal
             $modalBody.on('submit', 'form', function(e) {
-                e.preventDefault(); // Impede o submit tradicional
+                e.preventDefault(); 
 
                 var $form = $(this);
                 var url = $form.attr('action');
@@ -376,38 +346,31 @@
                 var $submitButton = $form.find('button[type="submit"]');
                 var originalButtonHtml = $submitButton.html();
 
-                // Desabilita o botão e mostra spinner
                 $submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...');
 
                 $.ajax({
                     url: url,
                     method: method,
-                    data: $form.serialize(), // Envia os dados do formulário
-                    dataType: 'json', // Espera uma resposta JSON do controlador
+                    data: $form.serialize(), 
+                    dataType: 'json', 
                     success: function(response) {
                         if (response.success) {
-                            // Sucesso!
                             ajaxModal.hide();
                             
                             // =================================================================
-                            // INÍCIO DA CORREÇÃO: Lógica de recarga manual (como no deleteBatch)
+                            // INÍCIO DA MUDANÇA: Lógica de recarga parcial
                             // =================================================================
                             
-                            // 1. Pega o link ativo da sidebar para saber qual página recarregar
                             let $activeLink = $('#adminSidebar a.nav-link.active');
                             if ($activeLink.length === 0) {
                                 $activeLink = $('#adminSidebar a.nav-link[href="<?= route_to('admin.dashboard') ?>"]');
                             }
-                            
                             let reloadUrl = $activeLink.attr('href');
                             
                             if (reloadUrl) {
-                                var $contentContainer = $('main.content');
-                                var $pageTitle = $('h1.mb-4');
-                                $pageTitle.text('Carregando...');
-                                $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                                // Mostra spinner no local
+                                $('#page-content-container').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
                                 
-                                // 2. Faz um NOVO request AJAX para buscar o HTML da página atualizada
                                 $.ajax({
                                     url: reloadUrl,
                                     type: 'GET',
@@ -415,26 +378,49 @@
                                     success: function(responseHtml) {
                                         try {
                                             var $newHtml = $('<div>').html(responseHtml);
-                                            var newTitle = $newHtml.find('h1.mb-4').html();
-                                            var newContent = $newHtml.find('main.content').html();
+                                            
+                                            // 1. Extrai o NOVO conteúdo dos alertas
+                                            var newAlerts = $newHtml.find('#alert-container').html();
+                                            // 2. Extrai o NOVO conteúdo da página
+                                            var newPageContent = $newHtml.find('#page-content-container').html();
+                                            // 3. Extrai os NOVOS scripts
                                             var newScripts = $newHtml.find('#ajax-scripts').html();
+                                            
+                                            // 4. Extrai os Títulos
                                             var newPageTitle = $newHtml.find('title').text();
+                                            var newH1Title = $newHtml.find('#page-title-h1').html(); // Título H1
+                                            var newPageActions = $newHtml.find('#page-action-buttons').html(); // Botões
 
-                                            if (newContent) {
-                                                $pageTitle.html(newTitle);
-                                                $contentContainer.html(newContent);
-                                                if (newPageTitle) document.title = newPageTitle;
-                                                
-                                                $('#ajax-scripts-container').remove();
-                                                if (newScripts) {
-                                                    var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
-                                                    $('body').append($scriptContainer);
-                                                }
-                                                $contentContainer.scrollTop(0);
+                                            // 5. Substitui os blocos
+                                            if (newAlerts !== undefined) {
+                                                $('#alert-container').html(newAlerts);
+                                            }
+                                            if (newPageContent !== undefined) {
+                                                $('#page-content-container').html(newPageContent);
                                             } else {
                                                 location.reload(); // Fallback
                                             }
+                                            
+                                            // 6. Atualiza Título H1 e Botões (que agora estão fora)
+                                            if (newH1Title !== undefined) {
+                                                $('#page-title-h1').html(newH1Title);
+                                            }
+                                            // ** Garante que os botões sejam atualizados, mas não apagados se a view não os tiver **
+                                            if (newPageActions !== undefined) {
+                                                 $('#page-action-buttons').html(newPageActions);
+                                            }
+
+                                            // 7. Atualiza Título da Aba
+                                            if (newPageTitle) document.title = newPageTitle;
+                                            
+                                            // 8. Recarrega os scripts da página
+                                            $('#ajax-scripts-container').empty().html(newScripts ? '<div id="ajax-scripts">' + newScripts + '</div>' : '');
+                                            
+                                            // Rola para o topo dos alertas
+                                            $('#main-content-wrapper').scrollTop(0); 
+                                            
                                         } catch(e) {
+                                            console.error("Erro ao processar recarga AJAX:", e);
                                             location.reload(); // Fallback
                                         }
                                     },
@@ -447,40 +433,36 @@
                             }
                             
                             // =================================================================
-                            // FIM DA CORREÇÃO
+                            // FIM DA MUDANÇA
                             // =================================================================
 
                         } else if (response.form_html) {
-                            // Erro de validação
+                            // Erro de validação (inalterado)
                             $modalBody.html(response.form_html);
-
                             if (typeof window.initModalScripts === 'function') {
                                 window.initModalScripts($modalBody);
                             }
 
                         } else {
-                             // Usa o novo modal de alerta
+                             // Erro geral (inalterado)
                              ajaxModal.hide(); 
                              showAlert(response.message || 'Ocorreu um erro desconhecido.', 'Erro');
                         }
                     },
                     error: function(jqXHR) {
-                        // Erro grave (500, 404, etc.)
+                        // Erro grave (inalterado)
                         console.error('Erro no AJAX submit:', jqXHR.responseText);
                         ajaxModal.hide();
                         showAlert('Ocorreu um erro grave no servidor. Tente novamente.', 'Erro Grave');
                     },
                     complete: function() {
-                         // Garante que o botão seja reativado em qualquer caso
-                         // (exceto sucesso, pois o modal fecha)
-                         if (!$submitButton.prop('disabled')) {
-                            $submitButton.prop('disabled', false).html(originalButtonHtml);
-                         }
+                         // Garante que o botão seja reativado
+                         $submitButton.prop('disabled', false).html(originalButtonHtml);
                     }
                 });
             });
 
-            // Limpa o modal quando ele é fechado
+            // Limpa o modal quando fechado (inalterado)
             ajaxModalElement.addEventListener('hidden.bs.modal', function () {
                 $modalTitle.text('Carregando...');
                 $modalBody.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');

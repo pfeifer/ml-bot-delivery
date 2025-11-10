@@ -1,4 +1,5 @@
 // public/js/template.js
+
 // --- Script para Toggle da Sidebar e Tooltips ---
 document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.getElementById('adminSidebar');
@@ -275,40 +276,58 @@ document.addEventListener('DOMContentLoaded', function () {
             var $link = $(this);
             var url = $link.attr('href');
 
-            // --- CORREÇÃO: Lógica que impedia o reload foi comentada ---
             // Ignorar se o link já estiver ativo
-            // if ($link.hasClass('active') && !url.includes('#')) { // Permite abas (que usam #)
-            //     return;
-            // }
-            // --- FIM DA CORREÇÃO ---
+            if ($link.hasClass('active') && !url.includes('#')) {
+                return;
+            }
+            
+            // =================================================================
+            // INÍCIO DA MUDANÇA: Seletores atualizados
+            // =================================================================
             
             // Selecionar os containers de conteúdo
-            var $contentContainer = $('main.content');
-            var $pageTitle = $('h1.mb-4'); // Seleciona o H1 do título da página
+            var $pageTitle = $('#page-title-h1'); 
+            var $contentContainer = $('#page-content-container');
+            var $alertContainer = $('#alert-container');
+            var $pageActions = $('#page-action-buttons');
 
             // Mostrar um spinner de loading
             $pageTitle.text('Carregando...');
+            $pageActions.empty(); // Limpa botões antigos
+            $alertContainer.empty(); // Limpa alertas antigos
             $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+            // =================================================================
+            // FIM DA MUDANÇA
+            // =================================================================
 
             // Fazer a requisição AJAX
             $.ajax({
                 url: url,
                 type: 'GET',
                 dataType: 'html', // Esperamos receber a página HTML completa
-                cache: false, // Adicionado para garantir que os dados sejam novos
+                cache: false, 
                 success: function (responseHtml) {
                     try {
                         // Coloca a resposta (HTML completo) em um div temporário
                         var $newHtml = $('<div>').html(responseHtml);
 
-                        // Encontrar o novo título, conteúdo e scripts da página de resposta
-                        var newTitle = $newHtml.find('h1.mb-4').html();
-                        var newContent = $newHtml.find('main.content').html();
-                        var newScripts = $newHtml.find('#ajax-scripts').html(); // Pega o conteúdo do nosso container
+                        // =================================================================
+                        // INÍCIO DA MUDANÇA: Extração dos novos blocos
+                        // =================================================================
 
-                        if (newContent) {
+                        // Encontrar o novo título, conteúdo e scripts da página de resposta
+                        var newH1Title = $newHtml.find('#page-title-h1').html();
+                        var newPageActions = $newHtml.find('#page-action-buttons').html();
+                        var newAlerts = $newHtml.find('#alert-container').html();
+                        var newContent = $newHtml.find('#page-content-container').html();
+                        var newScripts = $newHtml.find('#ajax-scripts').html(); // Pega o conteúdo do nosso container
+                        var newPageTitle = $newHtml.find('title').text();
+
+                        if (newContent !== undefined && newAlerts !== undefined) {
                             // 1. Atualizar o título e o conteúdo da página atual
-                            $pageTitle.html(newTitle);
+                            $pageTitle.html(newH1Title);
+                            $pageActions.html(newPageActions);
+                            $alertContainer.html(newAlerts);
                             $contentContainer.html(newContent);
 
                             // 2. Atualizar o estado 'active' na sidebar
@@ -319,28 +338,30 @@ document.addEventListener('DOMContentLoaded', function () {
                             history.pushState({ path: url }, '', url);
 
                             // 4. Atualizar o <title> da aba do navegador
-                            var newPageTitle = $newHtml.find('title').text();
                             if (newPageTitle) {
                                 document.title = newPageTitle;
                             }
                             
                             // 5. Remover scripts AJAX antigos (se existirem)
-                            $('#ajax-scripts-container').remove();
+                            $('#ajax-scripts-container').empty();
                             
                             // 6. Adicionar e executar os novos scripts (MUITO IMPORTANTE para DataTables)
                             if (newScripts) {
                                 // Criamos um novo container de script e o adicionamos
-                                var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
-                                $('body').append($scriptContainer);
+                                var $scriptContainer = $('<div id="ajax-scripts"></div>').html(newScripts);
+                                $('#ajax-scripts-container').append($scriptContainer);
                             }
                             
                             // 7. (Opcional) Rolar para o topo da área de conteúdo
-                            $contentContainer.scrollTop(0);
+                            $('#main-content-wrapper').scrollTop(0);
 
                         } else {
                             // Fallback: Se não conseguir "parsear" o conteúdo (ex: erro de login/redirect)
                             window.location.href = url;
                         }
+                        // =================================================================
+                        // FIM DA MUDANÇA
+                        // =================================================================
                     } catch(e) {
                          console.error("Erro ao processar resposta AJAX:", e);
                         window.location.href = url; // Fallback
