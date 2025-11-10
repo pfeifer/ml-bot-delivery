@@ -86,7 +86,10 @@
                 <div class="ms-auto navbar-controls"> 
                     
                     <div class="form-check form-switch d-flex align-items-center theme-switcher-container-navbar p-2 rounded">
-                        <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch" title="Alterar tema">
+                        
+                        <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch" 
+                               data-bs-title="Alterar tema" 
+                               data-bs-placement="left">
                         <label class="form-check-label theme-switcher-label ms-2" for="themeSwitch">
                             <i class="fa-solid fa-moon theme-icon fa-lg fa-fw"></i> 
                         </label>
@@ -179,7 +182,7 @@
             </div>
 
         </main>
-        </div>
+    </div>
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -336,7 +339,7 @@
                 });
             });
 
-            // 2. Lógica para SUBMETER o formulário dentro do modal
+            // 2. Lógica para SUBMETER o formulário dentro do modal (Lógica de recarga parcial inalterada)
             $modalBody.on('submit', 'form', function(e) {
                 e.preventDefault(); 
 
@@ -357,10 +360,6 @@
                         if (response.success) {
                             ajaxModal.hide();
                             
-                            // =================================================================
-                            // INÍCIO DA MUDANÇA: Lógica de recarga parcial
-                            // =================================================================
-                            
                             let $activeLink = $('#adminSidebar a.nav-link.active');
                             if ($activeLink.length === 0) {
                                 $activeLink = $('#adminSidebar a.nav-link[href="<?= route_to('admin.dashboard') ?>"]');
@@ -368,7 +367,6 @@
                             let reloadUrl = $activeLink.attr('href');
                             
                             if (reloadUrl) {
-                                // Mostra spinner no local
                                 $('#page-content-container').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
                                 
                                 $.ajax({
@@ -379,19 +377,13 @@
                                         try {
                                             var $newHtml = $('<div>').html(responseHtml);
                                             
-                                            // 1. Extrai o NOVO conteúdo dos alertas
                                             var newAlerts = $newHtml.find('#alert-container').html();
-                                            // 2. Extrai o NOVO conteúdo da página
                                             var newPageContent = $newHtml.find('#page-content-container').html();
-                                            // 3. Extrai os NOVOS scripts
                                             var newScripts = $newHtml.find('#ajax-scripts').html();
-                                            
-                                            // 4. Extrai os Títulos
                                             var newPageTitle = $newHtml.find('title').text();
-                                            var newH1Title = $newHtml.find('#page-title-h1').html(); // Título H1
-                                            var newPageActions = $newHtml.find('#page-action-buttons').html(); // Botões
+                                            var newH1Title = $newHtml.find('#page-title-h1').html(); 
+                                            var newPageActions = $newHtml.find('#page-action-buttons').html(); 
 
-                                            // 5. Substitui os blocos
                                             if (newAlerts !== undefined) {
                                                 $('#alert-container').html(newAlerts);
                                             }
@@ -401,22 +393,17 @@
                                                 location.reload(); // Fallback
                                             }
                                             
-                                            // 6. Atualiza Título H1 e Botões (que agora estão fora)
                                             if (newH1Title !== undefined) {
                                                 $('#page-title-h1').html(newH1Title);
                                             }
-                                            // ** Garante que os botões sejam atualizados, mas não apagados se a view não os tiver **
                                             if (newPageActions !== undefined) {
                                                  $('#page-action-buttons').html(newPageActions);
                                             }
 
-                                            // 7. Atualiza Título da Aba
                                             if (newPageTitle) document.title = newPageTitle;
                                             
-                                            // 8. Recarrega os scripts da página
                                             $('#ajax-scripts-container').empty().html(newScripts ? '<div id="ajax-scripts">' + newScripts + '</div>' : '');
                                             
-                                            // Rola para o topo dos alertas
                                             $('#main-content-wrapper').scrollTop(0); 
                                             
                                         } catch(e) {
@@ -432,10 +419,6 @@
                                 location.reload(); // Fallback final
                             }
                             
-                            // =================================================================
-                            // FIM DA MUDANÇA
-                            // =================================================================
-
                         } else if (response.form_html) {
                             // Erro de validação (inalterado)
                             $modalBody.html(response.form_html);
