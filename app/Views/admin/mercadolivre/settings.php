@@ -245,67 +245,126 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    // --- SCRIPT PARA "LEMBRAR" DA ABA ATIVA ---
-    document.addEventListener('DOMContentLoaded', function() {
+    // =================================================================
+    // SCRIPT PARA "LEMBRAR" DA ABA ATIVA (IIFE para rodar imediatamente)
+    // =================================================================
+    (function() {
         const tabs = document.querySelectorAll('#mlSettingsTabs button[data-bs-toggle="tab"]');
         const storageKey = 'mlSettingsActiveTab'; // Chave no localStorage
 
         // 1. Quando uma aba é mostrada, salva seu ID no localStorage
         tabs.forEach(tabEl => {
             tabEl.addEventListener('shown.bs.tab', function(event) {
-                // event.target é o botão da aba que foi clicado
                 const tabId = event.target.getAttribute('data-bs-target');
                 localStorage.setItem(storageKey, tabId);
             });
         });
 
-        // 2. No carregamento da página, verifica se há uma aba salva
+        // 2. No carregamento (ou recarregamento AJAX), verifica se há uma aba salva
         const activeTabId = localStorage.getItem(storageKey);
-        if (activeTabId) {
-            // Encontra o botão que corresponde ao ID salvo
-            const tabToActivate = document.querySelector(`#mlSettingsTabs button[data-bs-target="${activeTabId}"]`);
-            if (tabToActivate) {
-                // Usa a API do Bootstrap para mostrar a aba salva, em vez da padrão
-                // (O padrão 'active' é a aba de Credenciais, se nada for salvo)
-                new bootstrap.Tab(tabToActivate).show();
+        
+        // =================================================================
+        // INÍCIO DA CORREÇÃO: Adicionado setTimeout
+        // =================================================================
+        // Adia a execução para o próximo "tick" do navegador.
+        // Isso garante que o Bootstrap JS tenha inicializado os componentes
+        // antes de tentarmos chamar o método .show() neles.
+        setTimeout(function() {
+            if (activeTabId) {
+                const tabToActivate = document.querySelector(`#mlSettingsTabs button[data-bs-target="${activeTabId}"]`);
+                if (tabToActivate) {
+                    // Verifica se o componente Tab já foi instanciado, ou cria um novo
+                    const tabInstance = bootstrap.Tab.getInstance(tabToActivate) || new bootstrap.Tab(tabToActivate);
+                    tabInstance.show();
+                }
+            }
+        }, 10); // 10ms é o suficiente.
+        // =================================================================
+        // FIM DA CORREÇÃO
+        // =================================================================
+    })();
+
+    // =================================================================
+    // SCRIPT DO DATATABLE E BOTÕES (IIFE com jQuery)
+    // =================================================================
+    (function($) {
+        
+        let templatesTable = null; // Guarda a instância do DataTable
+        const messagesTabEl = document.getElementById('messages-tab');
+        
+        // Define o objeto de linguagem PT-BR uma vez
+        const dataTableLangPtBr = {
+            "emptyTable": "Nenhum registro encontrado",
+            "info": "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+            "infoEmpty": "Mostrando 0 até 0 de 0 registros",
+            "infoFiltered": "(Filtrados de _MAX_ registros)",
+            "infoThousands": ".",
+            "loadingRecords": "Carregando...",
+            "processing": "Processando...",
+            "zeroRecords": "Nenhum registro encontrado",
+            "search": "Pesquisar:",
+            "paginate": { "first": "Primeiro", "last": "Último", "next": "Próximo", "previous": "Anterior" },
+            "aria": { "sortAscending": ": Ativar para ordenar a coluna de forma ascendente", "sortDescending": ": Ativar para ordenar a coluna de forma descendente" },
+            "autoFill": { "cancel": "Cancelar", "fill": "Preencher todos os campos com <i>%d</i>", "fillHorizontal": "Preencher campos horizontalmente", "fillVertical": "Preencher campos verticalmente" },
+            "buttons": { "copy": "Copiar", "copyTitle": "Copiar para a Área de Transferência", "copySuccess": { "_": "%d linhas copiadas", "1": "1 linha copiada" }, "csv": "CSV", "excel": "Excel", "pageLength": { "-1": "Mostrar todos os registros", "_": "Mostrar %d registros" }, "pdf": "PDF", "print": "Imprimir", "colvis": "Visibilidade da Coluna" },
+            "select": { "rows": { "_": "Selecionado %d linhas", "0": "Nenhuma linha selecionada", "1": "Selecionado 1 linha" } }
+        };
+
+        // Função para inicializar a tabela
+        function initTemplatesTable() {
+            // Verifica se a tabela já existe (pode ser recarregamento AJAX)
+            if ($.fn.DataTable.isDataTable('#templatesTable')) {
+                templatesTable = $('#templatesTable').DataTable();
+                templatesTable.columns.adjust().draw();
+            } else if (!templatesTable) { // Só inicializa UMA VEZ
+                templatesTable = new DataTable('#templatesTable', {
+                    "columnDefs": [
+                        {
+                            "targets": [0, 4], // Coluna do checkbox e Ações
+                            "orderable": false,
+                            "searchable": false
+                        }
+                    ],
+                    "language": dataTableLangPtBr, 
+                    "order": [[ 1, "asc" ]] // Ordenar por ID (coluna 1) ascendente
+                });
             }
         }
-    });
-</script>
 
-<script>
-    $(document).ready(function () {
-        // 1. Inicializa o DataTables para Templates
-        const templatesTable = new DataTable('#templatesTable', {
-            "columnDefs": [
-                {
-                    "targets": [0, 4], // Coluna do checkbox e Ações
-                    "orderable": false,
-                    "searchable": false
-                }
-            ],
-            "language": {
-                "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json"
-            },
-            "order": [[ 1, "asc" ]] // Ordenar por ID (coluna 1) ascendente
-        });
+        if (messagesTabEl) {
+            // 1. Ouve o evento 'shown.bs.tab' (dispara DEPOIS que a aba fica visível)
+            messagesTabEl.addEventListener('shown.bs.tab', function (event) {
+                initTemplatesTable();
+            });
+        }
+        
+        // 2. Verifica se a aba já está ativa no carregamento (devido ao localStorage)
+        const activeTabButton = document.querySelector('#mlSettingsTabs button.active');
+        if (activeTabButton && activeTabButton.id === 'messages-tab') {
+            initTemplatesTable();
+        }
 
-        // 2. Lógica "Selecionar Todos" para Templates
+        // --- Lógica dos Botões (sem alterações) ---
+
         $('#selectAllTemplates').on('click', function () {
+            if (!templatesTable) return; 
             const isChecked = $(this).prop('checked');
-            // Seleciona todos, exceto os desabilitados (ID 1)
             templatesTable.rows().nodes().to$().find('.row-checkbox-template:not(:disabled)').prop('checked', isChecked);
         });
 
-        // 3. Desmarcar "Selecionar Todos"
         $('#templatesTable tbody').on('change', '.row-checkbox-template', function () {
             if (!$(this).prop('checked')) {
                 $('#selectAllTemplates').prop('checked', false);
             }
         });
 
-        // 4. Lógica "Editar Selecionado" para Templates (para o modal)
         $('#editSelectedTemplateBtnModal').on('mousedown', function(e) {
+            if (!templatesTable) { 
+                showAlert('Por favor, clique na aba "Templates de Mensagem" primeiro para carregar a tabela.', 'Atenção');
+                e.stopImmediatePropagation(); 
+                return;
+            }
+            
             const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
             
             if (selected.length === 0) {
@@ -324,9 +383,14 @@
             $(this).attr('data-url', editUrl);
         });
 
-        // 5. Lógica "Excluir Selecionados" para Templates (MODIFICADO PARA AJAX)
         $('#batchDeleteTemplatesForm').on('submit', function(e) {
-            e.preventDefault(); // Impede o envio imediato
+            e.preventDefault(); 
+            
+            if (!templatesTable) { 
+                showAlert('Por favor, clique na aba "Templates de Mensagem" primeiro para carregar a tabela.', 'Atenção');
+                return false;
+            }
+
             const form = $(this);
             const selected = templatesTable.rows().nodes().to$().find('.row-checkbox-template:checked');
             
@@ -338,7 +402,6 @@
             const msg = 'Tem certeza que deseja excluir os <strong>' + selected.length + '</strong> templates selecionados?<br><br><small>O Template Padrão (ID 1) não pode ser excluído e será ignorado.</small>';
             
             showConfirm(msg, 'Confirmar Exclusão', function() {
-                // --- INÍCIO DA LÓGICA AJAX ---
                 var $contentContainer = $('main.content');
                 var $pageTitle = $('h1.mb-4');
                 $pageTitle.text('Excluindo...');
@@ -348,7 +411,7 @@
                     url: form.attr('action'),
                     type: 'POST',
                     data: form.serialize(),
-                    dataType: 'html', // Espera o HTML da página redirecionada
+                    dataType: 'html', 
                     
                     success: function(responseHtml) {
                         try {
@@ -380,17 +443,15 @@
                         location.reload(); // Fallback em caso de erro
                     }
                 });
-                // --- FIM DA LÓGICA AJAX ---
             });
         });
 
-        // --- SCRIPT DO BOTÃO REFRESH (sem alterações) ---
         $('#forceRefreshButton').on('click', function(e) {
             e.preventDefault();
             var $button = $(this);
             var originalHtml = $button.html();
             var url = $button.data('url');
-            var $alertPlaceholder = $('#refresh-alert-placeholder'); // Seleciona o placeholder
+            var $alertPlaceholder = $('#refresh-alert-placeholder'); 
 
             $alertPlaceholder.html('');
             $button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Atualizando...');
@@ -420,7 +481,7 @@
                     $button.prop('disabled', false).html(originalHtml);
                 });
         });
+    })(jQuery); // Fim do IIFE do jQuery
 
-    });
 </script>
 <?= $this->endSection() ?>

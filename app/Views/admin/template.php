@@ -347,7 +347,6 @@
                 ajaxModal.show();
 
                 // Faz a requisição AJAX para buscar o conteúdo do formulário
-                // CORREÇÃO: Restaurado $.get() original
                 $.get(url, function(responseHtml) {
                     // O backend deve retornar SÓ o HTML do formulário
                     $modalBody.html(responseHtml);
@@ -368,7 +367,6 @@
             });
 
             // 2. Lógica para SUBMETER o formulário dentro do modal
-            // CORREÇÃO: Restaurado o seletor original
             $modalBody.on('submit', 'form', function(e) {
                 e.preventDefault(); // Impede o submit tradicional
 
@@ -391,20 +389,66 @@
                             // Sucesso!
                             ajaxModal.hide();
                             
-                            // CORREÇÃO: Lógica "sem piscar" (agora vai funcionar)
+                            // =================================================================
+                            // INÍCIO DA CORREÇÃO: Lógica de recarga manual (como no deleteBatch)
+                            // =================================================================
+                            
+                            // 1. Pega o link ativo da sidebar para saber qual página recarregar
                             let $activeLink = $('#adminSidebar a.nav-link.active');
                             if ($activeLink.length === 0) {
                                 $activeLink = $('#adminSidebar a.nav-link[href="<?= route_to('admin.dashboard') ?>"]');
                             }
+                            
+                            let reloadUrl = $activeLink.attr('href');
+                            
+                            if (reloadUrl) {
+                                var $contentContainer = $('main.content');
+                                var $pageTitle = $('h1.mb-4');
+                                $pageTitle.text('Carregando...');
+                                $contentContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                                
+                                // 2. Faz um NOVO request AJAX para buscar o HTML da página atualizada
+                                $.ajax({
+                                    url: reloadUrl,
+                                    type: 'GET',
+                                    dataType: 'html',
+                                    success: function(responseHtml) {
+                                        try {
+                                            var $newHtml = $('<div>').html(responseHtml);
+                                            var newTitle = $newHtml.find('h1.mb-4').html();
+                                            var newContent = $newHtml.find('main.content').html();
+                                            var newScripts = $newHtml.find('#ajax-scripts').html();
+                                            var newPageTitle = $newHtml.find('title').text();
 
-                            if ($activeLink.length > 0 && $activeLink.hasClass('ajax-link')) {
-                                // Clica no link ativo para recarregar o conteúdo via AJAX
-                                // (O template.js agora permite isso)
-                                $activeLink.click();
+                                            if (newContent) {
+                                                $pageTitle.html(newTitle);
+                                                $contentContainer.html(newContent);
+                                                if (newPageTitle) document.title = newPageTitle;
+                                                
+                                                $('#ajax-scripts-container').remove();
+                                                if (newScripts) {
+                                                    var $scriptContainer = $('<div id="ajax-scripts-container"></div>').html(newScripts);
+                                                    $('body').append($scriptContainer);
+                                                }
+                                                $contentContainer.scrollTop(0);
+                                            } else {
+                                                location.reload(); // Fallback
+                                            }
+                                        } catch(e) {
+                                            location.reload(); // Fallback
+                                        }
+                                    },
+                                    error: function() {
+                                        location.reload(); // Fallback
+                                    }
+                                });
                             } else {
-                                // Fallback (se algo der errado)
-                                location.reload(); 
+                                location.reload(); // Fallback final
                             }
+                            
+                            // =================================================================
+                            // FIM DA CORREÇÃO
+                            // =================================================================
 
                         } else if (response.form_html) {
                             // Erro de validação
@@ -425,6 +469,13 @@
                         console.error('Erro no AJAX submit:', jqXHR.responseText);
                         ajaxModal.hide();
                         showAlert('Ocorreu um erro grave no servidor. Tente novamente.', 'Erro Grave');
+                    },
+                    complete: function() {
+                         // Garante que o botão seja reativado em qualquer caso
+                         // (exceto sucesso, pois o modal fecha)
+                         if (!$submitButton.prop('disabled')) {
+                            $submitButton.prop('disabled', false).html(originalButtonHtml);
+                         }
                     }
                 });
             });

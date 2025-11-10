@@ -87,6 +87,13 @@
 <?= $this->section('scripts') ?>
 <script>
     $(document).ready(function () {
+        // Define o objeto de linguagem PT-BR
+        const dataTableLangPtBr = {
+            "emptyTable": "Nenhum registro encontrado", "info": "Mostrando de _START_ até _END_ de _TOTAL_ registros", "infoEmpty": "Mostrando 0 até 0 de 0 registros", "infoFiltered": "(Filtrados de _MAX_ registros)", "infoThousands": ".", "loadingRecords": "Carregando...", "processing": "Processando...", "zeroRecords": "Nenhum registro encontrado", "search": "Pesquisar:",
+            "paginate": { "first": "Primeiro", "last": "Último", "next": "Próximo", "previous": "Anterior" },
+            "aria": { "sortAscending": ": Ativar para ordenar a coluna de forma ascendente", "sortDescending": ": Ativar para ordenar a coluna de forma descendente" }
+        };
+
         // 1. Inicializa o DataTables
         const stockTable = new DataTable('#stockTable', {
             "columnDefs": [
@@ -96,9 +103,7 @@
                     "searchable": false
                 }
             ],
-            "language": {
-                "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json"
-            },
+            "language": dataTableLangPtBr, // <-- CORREÇÃO APLICADA
             "order": [[ 1, "desc" ]] // Ordenar por ID (coluna 1) por padrão
         });
 
