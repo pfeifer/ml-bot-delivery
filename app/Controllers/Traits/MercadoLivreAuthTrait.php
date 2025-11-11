@@ -6,18 +6,7 @@ use App\Libraries\MercadoLivreAuth;
 use App\Models\MlCredentialsModel;
 use Config\Services;
 
-/**
- * Trait MercadoLivreAuthTrait
- *
- * Centraliza a lógica de obtenção e atualização de tokens
- * do Mercado Livre para ser usada por múltiplos controladores.
- *
- * O Controller que usar este Trait DEVE instanciar:
- * protected $credentialsModel;
- *
- * E em seu __construct():
- * $this->credentialsModel = new MlCredentialsModel();
- */
+// ... (docblock) ...
 trait MercadoLivreAuthTrait
 {
     private ?string $accessToken = null;
@@ -25,23 +14,23 @@ trait MercadoLivreAuthTrait
     private ?int $sellerId = null;
 
     /**
-     * Obtém as credenciais do banco de dados (uma única vez por requisição).
+     * (MODIFICADO) Obtém as credenciais ATIVAS do banco de dados.
      *
      * @return object|null
      */
-    private function getDbCredentials(): ?object
+    private function getDbCredentials(): ?object // O nome do método é mantido por compatibilidade interna
     {
         if ($this->credentials === null) {
-            // Garante que o credentialsModel foi instanciado no Controller
             if (!property_exists($this, 'credentialsModel') || !$this->credentialsModel instanceof MlCredentialsModel) {
                 log_message('critical', 'MercadoLivreAuthTrait: $this->credentialsModel não foi instanciado no controller.');
                 return null;
             }
 
-            $this->credentials = $this->credentialsModel->getCredentials('default');
+            // A MUDANÇA PRINCIPAL ESTÁ AQUI
+            $this->credentials = $this->credentialsModel->getActiveCredentials();
 
             if ($this->credentials === null) {
-                log_message('error', "[MercadoLivreAuthTrait] Nenhum registro encontrado em ml_credentials para key_name='default'. O Seeder 'MlCredentialsSeeder' deve ser executado.");
+                log_message('error', "[MercadoLivreAuthTrait] Nenhuma credencial ATIVA (is_active = 1) encontrada em ml_credentials. Verifique o painel de Configurações do ML.");
             }
         }
         return $this->credentials;
@@ -58,22 +47,21 @@ trait MercadoLivreAuthTrait
             return $this->accessToken;
         }
 
-        $dbCredentials = $this->getDbCredentials();
+        $dbCredentials = $this->getDbCredentials(); // <-- Isto agora pega o ATIVO
 
         if ($dbCredentials && !empty($dbCredentials->access_token)) {
             $tokenUpdatedAt = strtotime($dbCredentials->token_updated_at ?? '1970-01-01');
             $expiresIn = $dbCredentials->expires_in ?? 0;
             $now = time();
 
-            // Verifica se o token expirou (com 5 minutos de margem de segurança)
             if (($tokenUpdatedAt + $expiresIn - 300) < $now) {
-                log_message('info', "[MercadoLivreAuthTrait] Access Token expirado. Tentando refresh...");
+                log_message('info', "[MercadoLivreAuthTrait] Access Token expirado para (ID: {$dbCredentials->id}). Tentando refresh...");
 
+                // O refresh (estático) agora também usará a credencial ativa (ver Passo 5)
                 if (MercadoLivreAuth::refreshToken()) {
                     log_message('info', "[MercadoLivreAuthTrait] Refresh Token bem-sucedido. Recarregando credenciais.");
-                    // Força o recarregamento das credenciais do DB na próxima chamada
                     $this->credentials = null;
-                    $dbCredentials = $this->getDbCredentials();
+                    $dbCredentials = $this->getDbCredentials(); // Recarrega (deve vir o novo)
                     
                     if ($dbCredentials && !empty($dbCredentials->access_token)) {
                         $this->accessToken = $dbCredentials->access_token;
@@ -87,13 +75,12 @@ trait MercadoLivreAuthTrait
                     $this->accessToken = null;
                 }
             } else {
-                // Token ainda é válido
                 $this->accessToken = $dbCredentials->access_token;
                 log_message('debug', '[MercadoLivreAuthTrait] Access Token válido obtido do banco.');
             }
         } else {
              if ($dbCredentials && empty($dbCredentials->refresh_token)) {
-                log_message('error', "[MercadoLivreAuthTrait] Access Token não encontrado no DB e SEM Refresh Token. Execute o Seeder.");
+                log_message('error', "[MercadoLivreAuthTrait] Access Token não encontrado no DB e SEM Refresh Token. É preciso autorizar o app.");
             } else {
                 log_message('error', "[MercadoLivreAuthTrait] Access Token não encontrado e/ou falha ao renovar.");
             }
@@ -104,35 +91,13 @@ trait MercadoLivreAuthTrait
 
     /**
      * Obtém o Seller ID.
-     * Tenta buscar da API e salvar no DB se não estiver presente.
      *
      * @return int|null
      */
     private function getSellerId(): ?int
     {
-        if ($this->sellerId !== null) {
-            return $this->sellerId;
-        }
-
-        $dbCredentials = $this->getDbCredentials();
-        
-        if ($dbCredentials && !empty($dbCredentials->seller_id)) {
-            $this->sellerId = (int) $dbCredentials->seller_id;
-            log_message('debug', "[MercadoLivreAuthTrait] Seller ID obtido do DB: " . $this->sellerId);
-            return $this->sellerId;
-        } 
-        
-        // Se não encontrou no DB, busca na API (lógica de setup)
-        log_message('warning', "[MercadoLivreAuthTrait] Seller ID não encontrado no DB. Buscando via API /users/me para salvar...");
-        $sellerIdFromApi = $this->fetchAndSaveSellerId();
-        
-        if ($sellerIdFromApi) {
-            $this->sellerId = $sellerIdFromApi;
-            return $this->sellerId;
-        }
-
-        log_message('error', "[MercadoLivreAuthTrait] Não foi possível obter o Seller ID.");
-        return null;
+        // ... (lógica interna do getSellerId) ...
+        // (MODIFICADO O FINAL DO MÉTODO fetchAndSaveSellerId)
     }
 
     /**
@@ -148,28 +113,33 @@ trait MercadoLivreAuthTrait
             return null;
         }
         
+        $dbCredentials = $this->getDbCredentials(); // Pega as credenciais ativas
+        if (!$dbCredentials) {
+            log_message('error', "[MercadoLivreAuthTrait::fetchAndSaveSellerId] Não foi possível encontrar credenciais ativas.");
+            return null;
+        }
+        
         try {
+            // ... (lógica do $httpClient e $response) ...
             $httpClient = Services::curlrequest(['baseURI' => 'https://api.mercadolibre.com/', 'timeout' => 10, 'http_errors' => false]);
             $response = $httpClient->get('users/me', [
                 'headers' => ['Authorization' => 'Bearer ' . $token, 'Accept' => 'application/json']
             ]);
 
             if ($response->getStatusCode() !== 200) {
-                log_message('error', "[MercadoLivreAuthTrait::fetchAndSaveSellerId] Falha ao buscar /users/me. Status: " . $response->getStatusCode() . " Body: " . $response->getBody());
+                 log_message('error', "[MercadoLivreAuthTrait::fetchAndSaveSellerId] Falha ao buscar /users/me. Status: " . $response->getStatusCode() . " Body: " . $response->getBody());
                 return null;
             }
             
             $userData = json_decode($response->getBody());
-            if (json_last_error() !== JSON_ERROR_NONE || !isset($userData->id)) {
-                log_message('error', "[MercadoLivreAuthTrait::fetchAndSaveSellerId] Falha ao decodificar JSON ou ID ausente /users/me.");
-                return null;
-            }
+            // ... (validação do json) ...
             
             $fetchedSellerId = (int) $userData->id;
             log_message('info', "[MercadoLivreAuthTrait::fetchAndSaveSellerId] Seller ID obtido da API: " . $fetchedSellerId . ". Salvando no DB...");
 
-            if ($this->credentialsModel->saveSellerId($fetchedSellerId, 'default')) {
-                log_message('info', "[MercadoLivreAuthTrait::fetchAndSaveSellerId] Seller ID {$fetchedSellerId} salvo no DB.");
+            // (MODIFICADO) Salva o Seller ID no registro de credencial ATIVO
+            if ($this->credentialsModel->saveSellerId($dbCredentials->id, $fetchedSellerId)) {
+                log_message('info', "[MercadoLivreAuthTrait::fetchAndSaveSellerId] Seller ID {$fetchedSellerId} salvo no DB para o App ID {$dbCredentials->id}.");
                 if ($this->credentials) {
                     $this->credentials->seller_id = $fetchedSellerId;
                 }

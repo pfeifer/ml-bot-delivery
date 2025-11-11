@@ -10,25 +10,19 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab" aria-controls="tab-profile" aria-selected="false">
             <i class="fa-solid fa-user-gear fa-fw"></i>
-            Perfil do Vendedor
+            Perfil (App Ativo)
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="credentials-tab" data-bs-toggle="tab" data-bs-target="#tab-credentials" type="button" role="tab" aria-controls="tab-credentials" aria-selected="true">
             <i class="fa-solid fa-key fa-fw"></i>
-            Credenciais e Status
+            Aplicações (Apps) e Status
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab" aria-controls="tab-messages" aria-selected="false">
             <i class="fa-solid fa-envelope-open-text fa-fw"></i>
             Templates de Mensagem
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#tab-other" type="button" role="tab" aria-controls="tab-other" aria-selected="false">
-            <i class="fa-solid fa-sliders fa-fw"></i>
-            Outras Configurações (em breve)
         </button>
     </li>
 </ul>
@@ -131,7 +125,7 @@
                 
                 <div class="alert alert-success" role="alert">
                     <i class="fa-solid fa-check-circle fa-fw"></i>
-                    <strong>Conexão bem-sucedida!</strong> Os dados da sua conta de vendedor foram carregados via API.
+                    <strong>Conexão bem-sucedida!</strong> Os dados da sua conta de vendedor (vinculada à aplicação <strong>ativa</strong>) foram carregados via API.
                 </div>
 
                 <h5><i class="fa-solid fa-user-circle fa-fw"></i> Informações do Vendedor (Mercado Livre)</h5>
@@ -169,77 +163,177 @@
                     <p>Não foi possível carregar os dados da sua conta do Mercado Livre (API `/users/me`).</p>
                     <hr>
                     <p class="mb-0">
-                        Verifique o status das suas credenciais na aba "Credenciais e Status".
+                        Verifique o status da sua <strong>aplicação ativa</strong> na aba "Aplicações (Apps) e Status".
+                        Ela pode não ter sido autorizada ou o Access Token expirou e não pôde ser renovado.
                     </p>
                 </div>
 
             <?php endif; ?>
         </div>
     </div>
+
     <div class="tab-pane fade show active" id="tab-credentials" role="tabpanel" aria-labelledby="credentials-tab" tabindex="0">
         <div class="p-3 border border-top-0 rounded-bottom">
             
-            <div id="refresh-alert-placeholder" class="mb-3"></div>
-            
-            <div>
-                    <h5><i class="fa-solid fa-key fa-fw"></i> Status dos Tokens (Banco de Dados)</h5>
-                    <?php if (isset($credentials) && $credentials !== null): ?>
-                    <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Access Token:
-                            <?php if (!empty($credentials->access_token)): ?>
-                                <span class="badge bg-success">Presente</span>
-                            <?php else: ?>
-                                <span class="badge bg-danger">Ausente</span>
-                            <?php endif; ?>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Refresh Token:
-                            <?php if (!empty($credentials->refresh_token)): ?>
-                                <span class="badge bg-success">Presente</span>
-                            <?php else: ?>
-                                <span class="badge bg-danger">Ausente</span>
-                            <?php endif; ?>
-                        </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Token Atualizado em:
-                            <strong><?= esc($credentials->token_updated_at ? date('d/m/Y H:i', strtotime($credentials->token_updated_at)) : 'Nunca') ?></strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Expira em (segundos):
-                            <strong><?= esc($credentials->expires_in ?? 'N/A') ?></strong>
-                        </li>
-                    </ul>
-                    <div class="d-grid gap-2 mt-3">
-                        <button type="button" 
-                            id="forceRefreshButton" 
-                            class="btn btn-outline-primary" 
-                            data-url="<?= route_to('cron.refresh-token', 'mR7HAhCdw9JPqylpbSLxWeyC879SoLNw') // USA A CHAVE DO SEU CRONCONTROLLER ?>"
-                            title="Executa a atualização em segundo plano">
-                            <i class="fa-solid fa-sync fa-fw"></i>
-                            Forçar Atualização do Token (Refresh)
-                        </button>
-                        <div class="form-text">
-                            Use isso se a conexão falhar. A atualização já é automática a cada 6 horas (pelo Cron Job) ou quando o token expira.
-                        </div>
-                    </div>
-                    <?php else: ?>
-                        <div class="alert alert-danger" role="alert">
-                        <strong>Erro Crítico:</strong> Não foi possível carregar as credenciais do banco de dados (tabela `ml_credentials`).
-                        </div>
-                    <?php endif; ?>
-            </div>
-        </div>
-    </div>
-    <div class="tab-pane fade" id="tab-other" role="tabpanel" aria-labelledby="other-tab" tabindex="0">
-        <div class="p-3 border border-top-0 rounded-bottom">
-            <h4>Outras Configurações</h4>
-            <p>Em breve: Outras configurações relacionadas à API do Mercado Livre.</p>
-        </div>
-    </div>
-</div>
+            <div class="mb-4">
+                <h5><i class="fa-solid fa-box-archive fa-fw"></i> Gerenciar Aplicações (Contas)</h5>
+                <p>Liste, adicione ou edite as configurações das suas aplicações do Mercado Livre. Use o "switch" para definir qual aplicação está ativa no momento.</p>
+                
+                <a href="<?= route_to('admin.mercadolivre.credentials.new') ?>"
+                   class="btn btn-success mb-3"
+                   data-bs-toggle="ajax-modal"
+                   data-title="Adicionar Nova Aplicação ML"
+                   data-modal-size="modal-lg"> <i class="fa-solid fa-plus fa-fw"></i> Adicionar Nova Aplicação
+                </a>
 
-<?= $this->endSection() ?>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">Ativo</th>
+                                <th>Nome da Aplicação</th>
+                                <th>Client ID</th>
+                                <th>Seller ID (Vendedor)</th>
+                                <th style="width: 150px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($all_credentials)): foreach ($all_credentials as $cred): ?>
+                                <tr <?= $cred->is_active ? 'class="table-primary"' : '' ?>>
+                                    <td>
+                                        <div class="form-check form-switch d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                   title="Ativar esta aplicação"
+                                                   style="transform: scale(1.3);"
+                                                   <?= $cred->is_active ? 'checked disabled' : '' ?>
+                                                   onchange="if(confirm('Tem certeza que deseja ativar a aplicação \'<?= esc($cred->app_name, 'js') ?>\'? Isso desativará qualquer outra aplicação.')) { window.location.href = '<?= route_to('admin.mercadolivre.credentials.activate', $cred->id) ?>'; } else { this.checked = false; }">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong><?= esc($cred->app_name) ?></strong>
+                                        <?= $cred->is_active ? '<span class="badge bg-primary ms-2">Ativo</span>' : '' ?>
+                                    </td>
+                                    <td>
+                                        <code><?= '...' . esc(substr($cred->client_id, -6)) ?></code>
+                                    </td>
+                                    <td>
+                                        <code><?= esc($cred->seller_id ?: 'Não vinculado') ?></code>
+                                    </td>
+                                    <td>
+                                        <a href="<?= route_to('admin.mercadolivre.credentials.edit', $cred->id) ?>"
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="ajax-modal"
+                                           data-title="Editar: <?= esc($cred->app_name, 'js') ?>"
+                                           data-modal-size="modal-lg" title="Editar">
+                                            <i class="fa-solid fa-pencil fa-fw"></i>
+                                        </a>
+                                        
+                                        <?php if (!$cred->is_active): // Não deixa excluir app ativa ?>
+                                        <a href="<?= route_to('admin.mercadolivre.credentials.delete', $cred->id) ?>"
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Tem certeza que deseja excluir a aplicação \'<?= esc($cred->app_name, 'js') ?>\'?')"
+                                           title="Excluir">
+                                            <i class="fa-solid fa-trash fa-fw"></i>
+                                        </a>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; else: ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">Nenhuma aplicação cadastrada. Clique em "Adicionar Nova Aplicação".</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+
+            <?php if (isset($credentials) && $credentials !== null): // $credentials agora é a ATIVA ?>
+                
+                <h4 class="mb-3">Status da Aplicação Ativa (<?= esc($credentials->app_name) ?>)</h4>
+
+                <div class_alias="mb-4 p-3 border rounded bg-body-tertiary">
+                    <?php if (!empty($credentials->refresh_token)): ?>
+                        <h5 class="text-success"><i class="fa-solid fa-check-circle fa-fw"></i> Aplicação Ativa Autorizada</h5>
+                        <p>
+                            Seu Refresh Token está salvo. A aplicação renovará o Access Token automaticamente.
+                            Se você revogou as permissões no Mercado Livre, use o botão abaixo para reautorizar.
+                        </p>
+                        <a href="<?= route_to('admin.mercadolivre.authorize') ?>" class="btn btn-outline-warning">
+                            <i class="fa-solid fa-key fa-fw"></i>
+                            Re-autorizar Aplicação Ativa
+                        </a>
+                    <?php else: ?>
+                        <h5 class="text-danger"><i class="fa-solid fa-triangle-exclamation fa-fw"></i> Autorização Pendente</h5>
+                        <p>
+                            A aplicação <strong>ativa</strong> ainda não foi autorizada a acessar sua conta do Mercado Livre.
+                            Clique no botão abaixo para conceder as permissões.
+                        </p>
+                        <a href="<?= route_to('admin.mercadolivre.authorize') ?>" class="btn btn-primary btn-lg" style="background-color: #009EE3; border-color: #009EE3;">
+                            <i class="fa-solid fa-handshake-simple fa-fw"></i>
+                            Autorizar Aplicação Ativa
+                        </a>
+                    <?php endif; ?>
+                </div>
+
+                <div id="refresh-alert-placeholder" class="mb-3 mt-3"></div>
+                
+                <div class="mt-3">
+                        <h5><i class="fa-solid fa-key fa-fw"></i> Status dos Tokens (Aplicação Ativa)</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Access Token:
+                                <?php if (!empty($credentials->access_token)): ?>
+                                    <span class="badge bg-success">Presente</span>
+                                <?php else: ?>
+                                    <span class="badge bg-danger">Ausente</span>
+                                <?php endif; ?>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Refresh Token:
+                                <?php if (!empty($credentials->refresh_token)): ?>
+                                    <span class="badge bg-success">Presente</span>
+                                <?php else: ?>
+                                    <span class="badge bg-danger">Ausente</span>
+                                <?php endif; ?>
+                            </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Token Atualizado em:
+                                <strong><?= esc($credentials->token_updated_at ? date('d/m/Y H:i', strtotime($credentials->token_updated_at)) : 'Nunca') ?></strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Expira em (segundos):
+                                <strong><?= esc($credentials->expires_in ?? 'N/A') ?></strong>
+                            </li>
+                        </ul>
+                        <div class="d-grid gap-2 mt-3">
+                            <button type="button" 
+                                id="forceRefreshButton" 
+                                class="btn btn-outline-primary" 
+                                data-url="<?= route_to('cron.refresh-token', 'mR7HAhCdw9JPqylpbSLxWeyC879SoLNw') // USA A CHAVE DO SEU CRONCONTROLLER ?>"
+                                title="Executa a atualização em segundo plano"
+                                <?= (empty($credentials->refresh_token)) ? 'disabled' : '' ?>>
+                                <i class="fa-solid fa-sync fa-fw"></i>
+                                Forçar Atualização do Token (Refresh)
+                            </button>
+                            <div class="form-text">
+                                Usa o Refresh Token da aplicação ativa para obter um novo Access Token.
+                            </div>
+                        </div>
+                </div>
+
+            <?php else: ?>
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-heading"><i class="fa-solid fa-toggle-off fa-fw"></i> Nenhuma Aplicação Ativa</h4>
+                    <p>Não há nenhuma aplicação marcada como "ativa". Por favor, adicione uma nova aplicação ou ative uma existente na lista acima para que o robô possa funcionar.</p>
+                </div>
+            <?php endif; ?>
+
+        </div>
+    </div>
+    </div> <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
@@ -333,12 +427,7 @@
             initTemplatesTable();
         }
 
-        // =================================================================
-        // INÍCIO DA CORREÇÃO: Adicionado .off() para limpar listeners antigos
-        // =================================================================
-
-        // --- Lógica dos Botões (os botões de ação estão DENTRO da aba) ---
-        // Usamos delegação de eventos, pois os botões são recarregados com o conteúdo
+        // --- Lógica dos Botões (Templates) ---
         
         $(document).off('click', '#selectAllTemplates').on('click', '#selectAllTemplates', function () {
             if (!templatesTable) return; 
@@ -346,7 +435,6 @@
             templatesTable.rows().nodes().to$().find('.row-checkbox-template:not(:disabled)').prop('checked', isChecked);
         });
 
-        // Este listener está no tbody, que é recarregado, por isso não precisa de .off()
         $('#templatesTable tbody').on('change', '.row-checkbox-template', function () {
             if (!$(this).prop('checked')) {
                 $('#selectAllTemplates').prop('checked', false);
@@ -378,7 +466,6 @@
             $(this).attr('data-url', editUrl);
         });
 
-        // 'deleteBatch' usa a lógica de recarga parcial
         $(document).off('submit', '#batchDeleteTemplatesForm').on('submit', '#batchDeleteTemplatesForm', function(e) {
             e.preventDefault(); 
             
@@ -412,27 +499,19 @@
                         try {
                             var $newHtml = $('<div>').html(responseHtml);
                             
-                            // 1. Extrai o NOVO conteúdo dos alertas
                             var newAlerts = $newHtml.find('#alert-container').html();
-                            // 2. Extrai o NOVO conteúdo da página
                             var newPageContent = $newHtml.find('#page-content-container').html();
-                            // 3. Extrai os NOVOS scripts
                             var newScripts = $newHtml.find('#ajax-scripts').html();
-                            
-                            // 4. Extrai o Título da Aba
                             var newPageTitle = $newHtml.find('title').text();
                             var newH1Title = $newHtml.find('#page-title-h1').html();
                             
                             if (newPageContent !== undefined && newAlerts !== undefined) {
-                                // 5. Substitui APENAS os contêineres
                                 $('#alert-container').html(newAlerts);
                                 $('#page-content-container').html(newPageContent);
                                 
-                                // 6. Atualiza o Título H1 (estático)
                                 if (newH1Title) $('#page-title-h1').html(newH1Title);
                                 if (newPageTitle) document.title = newPageTitle;
                                 
-                                // 7. Recarrega os scripts da página
                                 $('#ajax-scripts-container').empty().html(newScripts ? '<div id="ajax-scripts">' + newScripts + '</div>' : '');
                                 
                                 $('#main-content-wrapper').scrollTop(0);
@@ -451,7 +530,7 @@
             });
         });
 
-        // --- SCRIPT DO BOTÃO REFRESH ---
+        // --- SCRIPT DO BOTÃO REFRESH (Aplicações) ---
         $(document).off('click', '#forceRefreshButton').on('click', '#forceRefreshButton', function(e) {
             e.preventDefault();
             var $button = $(this);
@@ -473,11 +552,11 @@
 
             $.get(url)
                 .done(function(response) {
-                    var successMsg = '<strong>Sucesso!</strong> Token atualizado. A página será recarregada em 3 segundos...';
+                    var successMsg = '<strong>Sucesso!</strong> Token da aplicação ativa foi atualizado. A página será recarregada em 3 segundos...';
                     $alertPlaceholder.html(createAlert(successMsg, 'success'));
                     
                     setTimeout(function() {
-                        // Faz um reload parcial da aba atual, em vez da página inteira
+                        // Faz um reload parcial da página atual (via AJAX)
                         let $activeLink = $('#adminSidebar a.nav-link.active');
                         if ($activeLink.length > 0) {
                             $activeLink.click();
@@ -493,10 +572,6 @@
                     $button.prop('disabled', false).html(originalHtml);
                 });
         });
-
-        // =================================================================
-        // FIM DA CORREÇÃO
-        // =================================================================
 
     })(jQuery); // Fim do IIFE do jQuery
 

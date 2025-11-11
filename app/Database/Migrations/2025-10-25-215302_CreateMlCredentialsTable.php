@@ -3,8 +3,14 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use CodeIgniter\Database\RawSql; // Importar RawSql
 
-class CreateMlCredentialsTable extends Migration // Certifique-se que o nome da classe está correto
+/**
+ * Cria a tabela 'ml_credentials' com todos os campos necessários
+ * para armazenar múltiplas aplicações (client_id, client_secret, etc.)
+ * e um switch (is_active).
+ */
+class CreateMlCredentialsTable extends Migration
 {
     public function up()
     {
@@ -15,13 +21,32 @@ class CreateMlCredentialsTable extends Migration // Certifique-se que o nome da 
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'key_name' => [ // Mantém a chave para identificar o registro (útil se um dia tiver mais contas)
+            'app_name' => [ // Nome amigável (ex: "Loja Principal", "Loja Teste")
                 'type'       => 'VARCHAR',
-                'constraint' => '50',
-                'unique'     => true,
-                'default'    => 'default', // Ou pode deixar nulo se preferir
+                'constraint' => '100',
+                'null'       => false,
             ],
-            'seller_id' => [
+            'client_id' => [ // O APP_ID do ML
+                'type'       => 'VARCHAR',
+                'constraint' => '100',
+                'null'       => false,
+            ],
+            'client_secret' => [ // O Client Secret (será guardado encriptado)
+                'type'       => 'VARCHAR',
+                'constraint' => '255',
+                'null'       => false,
+            ],
+            'redirect_uri' => [ // A URL de callback
+                'type'       => 'VARCHAR',
+                'constraint' => '255',
+                'null'       => false,
+            ],
+            'is_active' => [ // O "switch" (0 = inativo, 1 = ativo)
+                'type'    => 'BOOLEAN',
+                'default' => false,
+                'null'    => false,
+            ],
+            'seller_id' => [ // ID do Vendedor vinculado
                 'type'       => 'BIGINT',
                 'unsigned'   => true,
                 'null'       => true, // Permite ser nulo até ser preenchido pela API
@@ -39,29 +64,31 @@ class CreateMlCredentialsTable extends Migration // Certifique-se que o nome da 
                 'constraint' => 11,
                 'null'       => true,
             ],
-            'token_updated_at' => [ // Quando o token foi atualizado/obtido pela última vez
+            'token_updated_at' => [ // Quando o token foi atualizado/obtido
                 'type' => 'DATETIME',
                 'null' => true,
             ],
-            // Substituí token_expires_at por token_updated_at + expires_in
-            // porque a API geralmente retorna 'expires_in' (duração)
-
-            'created_at' => [ // Gerenciado pelo Model agora
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
-            'updated_at' => [ // Gerenciado pelo Model agora
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
-            // Adicionei last_updated para a lógica do getSellerId()
-             'last_updated' => [
+            'last_updated' => [ // Campo de auditoria
                  'type' => 'DATETIME',
                  'null' => true,
              ],
+            'created_at' => [
+                'type'    => 'DATETIME',
+                'null'    => true,
+                'default' => new RawSql('CURRENT_TIMESTAMP'),
+            ],
+            'updated_at' => [
+                'type'      => 'DATETIME',
+                'null'      => true,
+                'on update' => new RawSql('CURRENT_TIMESTAMP'), // Atualiza sozinho
+            ],
         ]);
-        $this->forge->addKey('id', true);
-        $this->forge->addKey('seller_id'); // Adiciona índice para seller_id
+        
+        $this->forge->addKey('id', true); // Chave Primária
+        $this->forge->addKey('app_name'); // Índice para busca
+        $this->forge->addKey('is_active'); // Índice para o "switch"
+        $this->forge->addKey('seller_id'); // Índice
+        
         $this->forge->createTable('ml_credentials');
     }
 

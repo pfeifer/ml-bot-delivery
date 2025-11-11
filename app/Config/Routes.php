@@ -33,13 +33,19 @@ $routes->group('admin', ['filter' => 'auth'], static function ($routes) {
     $routes->get('stock/new', 'Admin\StockController::new', ['as' => 'admin.stock.new']);
     $routes->post('stock/add', 'Admin\StockController::add', ['as' => 'admin.stock.add']);
     $routes->post('stock/delete-batch', 'Admin\StockController::deleteBatch', ['as' => 'admin.stock.delete.batch']);
-
     // Pedidos
     $routes->get('orders', 'Admin\OrdersController::index', ['as' => 'admin.orders']);
-
     // --- ROTA PRINCIPAL DO MERCADO LIVRE (COM TABS) ---
     $routes->get('mercadolivre', 'Admin\MercadoLivreController::index', ['as' => 'admin.mercadolivre.settings']);
-
+    // --- ROTAS DE AUTORIZAÇÃO OAUTH2 ---
+    $routes->get('mercadolivre/authorize', 'Admin\MercadoLivreController::authorize', ['as' => 'admin.mercadolivre.authorize']);
+    $routes->get('mercadolivre/callback', 'Admin\MercadoLivreController::handleCallback', ['as' => 'admin.mercadolivre.callback']);
+    // --- (NOVAS) ROTAS PARA GERENCIAR CREDENCIAIS ---
+    $routes->post('mercadolivre/credentials/save', 'Admin\MercadoLivreController::saveCredentials', ['as' => 'admin.mercadolivre.credentials.save']);
+    $routes->get('mercadolivre/credentials/new', 'Admin\MercadoLivreController::credentialForm', ['as' => 'admin.mercadolivre.credentials.new']);
+    $routes->get('mercadolivre/credentials/edit/(:num)', 'Admin\MercadoLivreController::credentialForm/$1', ['as' => 'admin.mercadolivre.credentials.edit']);
+    $routes->get('mercadolivre/credentials/delete/(:num)', 'Admin\MercadoLivreController::deleteCredential/$1', ['as' => 'admin.mercadolivre.credentials.delete']);
+    $routes->get('mercadolivre/credentials/activate/(:num)', 'Admin\MercadoLivreController::activateCredential/$1', ['as' => 'admin.mercadolivre.credentials.activate']);
     // --- ROTAS PARA TEMPLATES DE MENSAGEM (CRUD) ---
     $routes->group('message-templates', static function ($routes) {
         $routes->get('/', 'Admin\MercadoLivreController::index', ['as' => 'admin.message_templates']);
@@ -52,8 +58,6 @@ $routes->group('admin', ['filter' => 'auth'], static function ($routes) {
     }); // Fim do grupo message-templates
 
 }); // Fim do grupo admin
-
-
 /*
  * --------------------------------------------------------------------
  * Rotas de Cron Job (NÃO DEVEM TER FILTRO DE AUTENTICAÇÃO)
