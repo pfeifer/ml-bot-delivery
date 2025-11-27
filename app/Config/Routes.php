@@ -8,17 +8,18 @@ use CodeIgniter\Router\RouteCollection;
 //$routes->get('/', 'Home::index');
 $routes->get('/', 'AuthController::loginForm', ['as' => 'home']);
 $routes->post('webhook/ml', 'WebhookController::handle');
-
 // Rotas de Autenticação
 $routes->get('login', 'AuthController::loginForm', ['as' => 'login']); // Rota nomeada 'login'
 $routes->post('login', 'AuthController::attemptLogin');
 $routes->get('logout', 'AuthController::logout');
-
+// Rotas de Recuperação de Senha
+$routes->get('forgot-password', 'AuthController::forgotPasswordForm', ['as' => 'forgot_password']);
+$routes->post('forgot-password', 'AuthController::sendResetLink', ['as' => 'forgot_password.send']);
+$routes->get('reset-password/(:segment)', 'AuthController::resetPasswordForm/$1', ['as' => 'reset_password']);
+$routes->post('reset-password', 'AuthController::updatePassword', ['as' => 'reset_password.update']);
 // Grupo de Rotas do Admin (Protegido por Filtro 'auth')
 $routes->group('admin', ['filter' => 'auth'], static function ($routes) {
-    
     $routes->get('/', 'Admin\DashboardController::index', ['as' => 'admin.dashboard']);
-
     // Produtos
     $routes->get('products', 'Admin\ProductsController::index', ['as' => 'admin.products']);
     $routes->get('products/new', 'Admin\ProductsController::new', ['as' => 'admin.products.new']);
@@ -27,7 +28,6 @@ $routes->group('admin', ['filter' => 'auth'], static function ($routes) {
     $routes->post('products/update/(:num)', 'Admin\ProductsController::update/$1', ['as' => 'admin.products.update']);
     $routes->get('products/delete/(:num)', 'Admin\ProductsController::delete/$1', ['as' => 'admin.products.delete']);
     $routes->post('products/delete-batch', 'Admin\ProductsController::deleteBatch', ['as' => 'admin.products.delete.batch']);
-
     // Estoque
     $routes->get('stock', 'Admin\StockController::index', ['as' => 'admin.stock']);
     $routes->get('stock/new', 'Admin\StockController::new', ['as' => 'admin.stock.new']);

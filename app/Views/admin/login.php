@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Admin ML Bot Delivery</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" 
-        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" 
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <script>
-        (function() {
+        (function () {
             const getPreferredTheme = () => {
                 // Verifica a preferência do sistema operacional
                 return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -38,19 +38,19 @@
 </head>
 
 <body class="d-flex justify-content-center align-items-start">
-    
+
     <div class="container login-container bg-body p-4 p-md-5 rounded shadow">
         <h2 class="text-center mb-4">Admin Login</h2>
-        
+
         <?php if (session()->getFlashdata('error')): ?>
             <div class="alert alert-danger" role="alert">
                 <?= session()->getFlashdata('error') ?>
             </div>
         <?php endif; ?>
-        
+
         <?= form_open(route_to('login')) ?>
         <?= csrf_field() ?>
-        
+
         <div class="mb-3">
             <label for="email" class="form-label">Email:</label>
             <div class="input-group">
@@ -59,13 +59,13 @@
                 </span>
                 <input type="email" name="email" id="email"
                     class="form-control <?= (isset(validation_errors()['email'])) ? 'is-invalid' : '' ?>"
-                    value="<?= old('email') ?>" required 
-                    placeholder="seu.email@exemplo.com"> <?php if (isset(validation_errors()['email'])): ?>
+                    value="<?= old('email') ?>" required placeholder="seu.email@exemplo.com">
+                <?php if (isset(validation_errors()['email'])): ?>
                     <div class="invalid-feedback"><?= validation_errors()['email'] ?></div>
                 <?php endif; ?>
             </div>
         </div>
-        
+
         <div class="mb-3">
             <label for="password" class="form-label">Senha:</label>
             <div class="input-group">
@@ -79,14 +79,16 @@
                 <?php endif; ?>
             </div>
         </div>
-        
         <div class="d-grid">
+            <div class="mb-3 text-end">
+                <a href="<?= route_to('forgot_password') ?>" class="text-decoration-none small">Esqueceu sua senha?</a>
+            </div>
             <button type="submit" class="btn btn-primary"
                 style="background-color: #DC4814; border-color: #DC4814;">Entrar</button>
         </div>
         <?= form_close() ?>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
